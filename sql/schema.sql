@@ -1,0 +1,1 @@
+-- This file contains the SQL statements to create the database schema for the application.

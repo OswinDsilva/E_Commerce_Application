@@ -4,6 +4,36 @@ This document outlines the tables used for the application, along with their fie
 
 ![Schema Diagram](./images/schema_diagram.jpg)
 
+---
+
+## Lookup Tables
+
+### roles
+
+**Fields:**
+- `id` – INTEGER
+- `role` – VARCHAR(255)
+
+**Constraints:**
+- Primary Key: `id`
+- Unique: `role`
+- NOT NULL: `role`
+
+---
+
+### categories
+
+**Fields:**
+- `id` – BIGINT
+- `category` – VARCHAR(255)
+
+**Constraints:**
+- Primary Key: `id`
+- Unique: `category`
+- NOT NULL: `category`
+
+---
+
 ## Strong Entities
 
 ### Users
@@ -15,12 +45,17 @@ This document outlines the tables used for the application, along with their fie
 - `email` – VARCHAR(255)
 - `phone` – VARCHAR(20)
 - `created_at` – TIMESTAMPTZ
+- `role_id` – INTEGER
 
 **Constraints:**
 - Primary Key: `u_id`
+- Foreign Key: `role_id` → `roles(id)` ON DELETE RESTRICT
 - Unique: `username`
 - Unique: `email`
-- NOT NULL: `username`, `password_hash`, `email`, `phone`, `created_at`
+- NOT NULL: `username`, `password_hash`, `email`, `phone`, `created_at`, `role_id`
+
+---
+
 ### Bank_acc
 
 **Fields:**
@@ -33,6 +68,9 @@ This document outlines the tables used for the application, along with their fie
 - Primary Key: `acc_no`
 - Foreign Key: `u_id` → `Users(u_id)` ON DELETE CASCADE
 - NOT NULL: `bank_name`, `expiry_date`, `u_id`
+
+---
+
 ### Products
 
 **Fields:**
@@ -40,13 +78,17 @@ This document outlines the tables used for the application, along with their fie
 - `product_name` – VARCHAR(255)
 - `brand` – VARCHAR(255)
 - `price` – DECIMAL(10,2)
-- `category` – VARCHAR(255)
+- `category` – INTEGER
 - `description` – TEXT
 
 **Constraints:**
 - Primary Key: `p_id`
+- Foreign Key: `category` → `categories(id)` ON DELETE RESTRICT
 - CHECK: `price ≥ 0`
 - NOT NULL: `product_name`, `brand`, `price`, `category`, `description`
+
+---
+
 ### Orders
 
 **Fields:**
@@ -61,9 +103,12 @@ This document outlines the tables used for the application, along with their fie
 - Primary Key: `o_id`
 - Foreign Key: `u_id` → `Users(u_id)` ON DELETE CASCADE
 - Foreign Key: `acc_no` → `Bank_acc(acc_no)` ON DELETE SET NULL
-- CHECK: `status ∈ ('CREATED','PAID','SHIPPED','DELIVERED','CANCELLED')`
+- CHECK: `status ∈ ('CREATED', 'PAID', 'SHIPPED', 'DELIVERED', 'CANCELLED')`
 - CHECK: `total_amount ≥ 0`
 - NOT NULL: `order_date`, `status`, `total_amount`, `u_id`
+
+---
+
 ### Invoice
 
 **Fields:**
@@ -77,9 +122,12 @@ This document outlines the tables used for the application, along with their fie
 **Constraints:**
 - Primary Key: `i_id`
 - Foreign Key: `o_id` → `Orders(o_id)` ON DELETE CASCADE
-- UNIQUE: `o_id`
+- Unique: `o_id`
 - CHECK: `total_amount ≥ 0`
 - NOT NULL: `invoice_date`, `total_amount`, `shipping_address`, `billing_address`, `o_id`
+
+---
+
 ## Weak Entities
 
 ### Inventory
@@ -94,6 +142,9 @@ This document outlines the tables used for the application, along with their fie
 - Foreign Key: `p_id` → `Products(p_id)` ON DELETE CASCADE
 - CHECK: `quantity ≥ 0`
 - NOT NULL: `quantity`, `last_updated`
+
+---
+
 ## Relations
 
 ### ordered_items

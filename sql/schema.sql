@@ -1,88 +1,126 @@
 -- This file contains the SQL statements to create the database schema for the application.
 
--- USERS
-CREATE TABLE Users (
-u_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-username VARCHAR(255) NOT NULL UNIQUE,
-password_hash VARCHAR(255) NOT NULL,
-email VARCHAR(255) NOT NULL UNIQUE,
-phone VARCHAR(20) NOT NULL,
-created_at TIMESTAMPTZ NOT NULL
-);
+-- LOOKUP TABLES
 
--- BANK ACCOUNT
-CREATE TABLE Bank_acc (
-acc_no INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-bank_name VARCHAR(255) NOT NULL,
-expiry_date DATE NOT NULL,
-u_id INTEGER NOT NULL,
-CONSTRAINT bank_acc_user_fk
-FOREIGN KEY (u_id) REFERENCES Users(u_id)
-ON DELETE CASCADE
+CREATE TABLE "roles" (
+    "id"   INTEGER      NOT NULL,
+    "role" VARCHAR(255) NOT NULL
 );
+ALTER TABLE "roles" ADD PRIMARY KEY ("id");
+
+
+CREATE TABLE "categories" (
+    "id"       BIGINT       NOT NULL,
+    "category" VARCHAR(255) NOT NULL
+);
+ALTER TABLE "categories" ADD PRIMARY KEY ("id");
+
+-- USERS
+
+CREATE TABLE "Users" (
+    "u_id"          INTEGER                      NOT NULL,
+    "username"      VARCHAR(255)                 NOT NULL,
+    "password_hash" VARCHAR(255)                 NOT NULL,
+    "email"         VARCHAR(255)                 NOT NULL,
+    "phone"         VARCHAR(20)                  NOT NULL,
+    "created_at"    TIMESTAMP(0) WITH TIME ZONE  NOT NULL DEFAULT NOW(),
+    "role_id"       INTEGER                      NOT NULL
+);
+ALTER TABLE "Users" ADD PRIMARY KEY ("u_id");
+ALTER TABLE "Users" ADD CONSTRAINT "users_username_unique" UNIQUE ("username");
+ALTER TABLE "Users" ADD CONSTRAINT "users_email_unique"    UNIQUE ("email");
+ALTER TABLE "Users" ADD CONSTRAINT "users_role_id_foreign"
+    FOREIGN KEY ("role_id") REFERENCES "roles" ("id")
+    ON DELETE RESTRICT;
+
+-- BANK ACCOUNTS
+
+CREATE TABLE "Bank_acc" (
+    "acc_no"      INTEGER      NOT NULL,
+    "bank_name"   VARCHAR(255) NOT NULL,
+    "expiry_date" DATE         NOT NULL,
+    "u_id"        INTEGER      NOT NULL
+);
+ALTER TABLE "Bank_acc" ADD PRIMARY KEY ("acc_no");
+ALTER TABLE "Bank_acc" ADD CONSTRAINT "bank_acc_u_id_foreign"
+    FOREIGN KEY ("u_id") REFERENCES "Users" ("u_id")
+    ON DELETE CASCADE;
 
 -- PRODUCTS
-CREATE TABLE Products (
-p_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-product_name VARCHAR(255) NOT NULL,
-brand VARCHAR(255) NOT NULL,
-price DECIMAL(10,2) NOT NULL CHECK (price >= 0),
-category VARCHAR(255) NOT NULL,
-description TEXT NOT NULL
-);
 
--- INVENTORY (Weak Entity)
-CREATE TABLE Inventory (
-p_id INTEGER PRIMARY KEY,
-quantity INTEGER NOT NULL CHECK (quantity >= 0),
-last_updated TIMESTAMPTZ NOT NULL,
-CONSTRAINT inventory_product_fk
-FOREIGN KEY (p_id) REFERENCES Products(p_id)
-ON DELETE CASCADE
+CREATE TABLE "Products" (
+    "p_id"         INTEGER        NOT NULL,
+    "product_name" VARCHAR(255)   NOT NULL,
+    "brand"        VARCHAR(255)   NOT NULL,
+    "price"        DECIMAL(10, 2) NOT NULL CHECK ("price" >= 0),
+    "category"     INTEGER        NOT NULL,
+    "description"  TEXT           NOT NULL
 );
+ALTER TABLE "Products" ADD PRIMARY KEY ("p_id");
+ALTER TABLE "Products" ADD CONSTRAINT "products_category_foreign"
+    FOREIGN KEY ("category") REFERENCES "categories" ("id")
+    ON DELETE RESTRICT;
+
+-- INVENTORY (Weak Entity — 1:1 with Products)
+
+CREATE TABLE "Inventory" (
+    "p_id"         INTEGER                     NOT NULL,
+    "quantity"     INTEGER                     NOT NULL CHECK ("quantity" >= 0),
+    "last_updated" TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+ALTER TABLE "Inventory" ADD PRIMARY KEY ("p_id");
+ALTER TABLE "Inventory" ADD CONSTRAINT "inventory_p_id_foreign"
+    FOREIGN KEY ("p_id") REFERENCES "Products" ("p_id")
+    ON DELETE CASCADE;
 
 -- ORDERS
-CREATE TABLE Orders (
-o_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-order_date DATE NOT NULL,
-status VARCHAR(50) NOT NULL CHECK (
-status IN ('CREATED','PAID','SHIPPED','DELIVERED','CANCELLED')
-),
-total_amount DECIMAL(10,2) NOT NULL CHECK (total_amount >= 0),
-u_id INTEGER NOT NULL,
-acc_no INTEGER,
-CONSTRAINT orders_user_fk
-FOREIGN KEY (u_id) REFERENCES Users(u_id)
-ON DELETE CASCADE,
-CONSTRAINT orders_bank_fk
-FOREIGN KEY (acc_no) REFERENCES Bank_acc(acc_no)
-ON DELETE SET NULL
+
+CREATE TABLE "Orders" (
+    "o_id"         INTEGER        NOT NULL,
+    "order_date"   DATE           NOT NULL,
+    "status"       VARCHAR(255)   NOT NULL CHECK (
+        "status" IN ('CREATED', 'PAID', 'SHIPPED', 'DELIVERED', 'CANCELLED')
+    ),
+    "total_amount" DECIMAL(10, 2) NOT NULL CHECK ("total_amount" >= 0),
+    "u_id"         INTEGER        NOT NULL,
+    "acc_no"       INTEGER        NULL
 );
+ALTER TABLE "Orders" ADD PRIMARY KEY ("o_id");
+ALTER TABLE "Orders" ADD CONSTRAINT "orders_u_id_foreign"
+    FOREIGN KEY ("u_id") REFERENCES "Users" ("u_id")
+    ON DELETE CASCADE;
+ALTER TABLE "Orders" ADD CONSTRAINT "orders_acc_no_foreign"
+    FOREIGN KEY ("acc_no") REFERENCES "Bank_acc" ("acc_no")
+    ON DELETE SET NULL;
 
 -- INVOICE (1:1 with Orders)
-CREATE TABLE Invoice (
-i_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-invoice_date DATE NOT NULL,
-total_amount DECIMAL(10,2) NOT NULL CHECK (total_amount >= 0),
-shipping_address TEXT NOT NULL,
-billing_address TEXT NOT NULL,
-o_id INTEGER NOT NULL UNIQUE,
-CONSTRAINT invoice_order_fk
-FOREIGN KEY (o_id) REFERENCES Orders(o_id)
-ON DELETE CASCADE
-);
 
--- ORDERED ITEMS (Junction Table)
-CREATE TABLE ordered_items (
-o_id INTEGER NOT NULL,
-p_id INTEGER NOT NULL,
-quantity INTEGER NOT NULL CHECK (quantity > 0),
-price_at_purchase DECIMAL(10,2) NOT NULL CHECK (price_at_purchase >= 0),
-PRIMARY KEY (o_id, p_id),
-CONSTRAINT ordered_items_order_fk
-FOREIGN KEY (o_id) REFERENCES Orders(o_id)
-ON DELETE CASCADE,
-CONSTRAINT ordered_items_product_fk
-FOREIGN KEY (p_id) REFERENCES Products(p_id)
-ON DELETE CASCADE
+CREATE TABLE "Invoice" (
+    "i_id"             INTEGER        NOT NULL,
+    "invoice_date"     DATE           NOT NULL,
+    "total_amount"     DECIMAL(10, 2) NOT NULL CHECK ("total_amount" >= 0),
+    "shipping_address" TEXT           NOT NULL,
+    "billing_address"  TEXT           NOT NULL,
+    "o_id"             INTEGER        NOT NULL
 );
+ALTER TABLE "Invoice" ADD PRIMARY KEY ("i_id");
+ALTER TABLE "Invoice" ADD CONSTRAINT "invoice_o_id_unique" UNIQUE ("o_id");
+ALTER TABLE "Invoice" ADD CONSTRAINT "invoice_o_id_foreign"
+    FOREIGN KEY ("o_id") REFERENCES "Orders" ("o_id")
+    ON DELETE CASCADE;
+
+-- ORDERED ITEMS (Junction Table — Orders ↔ Products)
+
+CREATE TABLE "ordered_items" (
+    "o_id"              INTEGER        NOT NULL,
+    "p_id"              INTEGER        NOT NULL,
+    "quantity"          INTEGER        NOT NULL CHECK ("quantity" > 0),
+    "price_at_purchase" DECIMAL(10, 2) NOT NULL CHECK ("price_at_purchase" >= 0)
+);
+ALTER TABLE "ordered_items" ADD PRIMARY KEY ("o_id", "p_id");
+ALTER TABLE "ordered_items" ADD CONSTRAINT "ordered_items_o_id_foreign"
+    FOREIGN KEY ("o_id") REFERENCES "Orders" ("o_id")
+    ON DELETE CASCADE;
+ALTER TABLE "ordered_items" ADD CONSTRAINT "ordered_items_p_id_foreign"
+    FOREIGN KEY ("p_id") REFERENCES "Products" ("p_id")
+    ON DELETE CASCADE;

@@ -13,7 +13,7 @@ The Level 0 DFD represents the entire system as a single process interacting wit
 
 - User (Customer)
 - Admin
-- Database (PostgreSQL)
+- Database (MySQL)
 
 ### Main Process
 

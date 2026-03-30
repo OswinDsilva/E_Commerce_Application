@@ -44,7 +44,7 @@ This document outlines the tables used for the application, along with their fie
 - `password_hash` – VARCHAR(255)
 - `email` – VARCHAR(255)
 - `phone` – VARCHAR(20)
-- `created_at` – TIMESTAMPTZ
+- `created_at` – DATETIME
 - `role_id` – INTEGER
 
 **Constraints:**
@@ -135,7 +135,7 @@ This document outlines the tables used for the application, along with their fie
 **Fields:**
 - `p_id` – INTEGER
 - `quantity` – INTEGER
-- `last_updated` – TIMESTAMPTZ
+- `last_updated` – DATETIME
 
 **Constraints:**
 - Primary Key: `p_id`

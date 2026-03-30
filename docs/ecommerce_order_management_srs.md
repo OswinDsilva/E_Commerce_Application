@@ -45,7 +45,7 @@ Frontend (UI)
       ↓
 Backend (FastAPI)
       ↓
-PostgreSQL Database
+MySQL Database
 ```
 
 ### 2.2 System Functions
@@ -165,7 +165,7 @@ The system shall provide pages for:
 
 ### 5.2 Database Interface
 
-- The backend shall interact with PostgreSQL
+- The backend shall interact with MySQL
 - All critical operations shall maintain referential integrity
 
 ---
@@ -217,7 +217,7 @@ Admin Login → Add / Update Product → Update Inventory
 
 ## 9. Constraints
 
-- The system uses **PostgreSQL** as the database
+- The system uses **MySQL** as the database
 - Backend is implemented using **FastAPI**
 - Cart is session-based and not persistent
 
@@ -244,7 +244,7 @@ Frontend (HTML/JS)
         ↓
 FastAPI Backend
         ↓
-PostgreSQL Database
+MySQL Database
 ```
 
 ### 11.2 Component Responsibilities

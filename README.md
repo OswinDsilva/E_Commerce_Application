@@ -20,22 +20,22 @@ cd E_Commerce_Application
 
 Create a `.env` file and copy the contents from `.env.example` into it.
 
-## 3. Set up PostgreSQL
+## 3. Set up MySQL
 
-1. Install PostgreSQL.
-2. Create a PostgreSQL user.
+1. Install MySQL.
+2. Create a MySQL user.
 3. Create your database (for example, one for development and optionally one for testing).
-4. Update the database values in `.env` with your PostgreSQL credentials.
+4. Update the database values in `.env` with your MySQL credentials.
 
 ## 4. Apply the schema
 
 Run the schema script from the project root:
 
 ```bash
-psql -U your_user -d your_database_name -f sql/schema.sql
+mysql -u your_user -p your_database_name < sql/schema.sql
 ```
 
-Or paste the entire `sql/schema.sql` file into your PostgreSQL terminal.
+Or paste the entire `sql/schema.sql` file into your MySQL terminal.
 
 If you are using both development and test databases, run the same command for each database name.
 

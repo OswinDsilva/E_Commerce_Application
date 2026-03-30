@@ -7,7 +7,7 @@
 
 The system is a simplified e-commerce web application that allows users to browse products, add items to a cart, place orders, make payments, and generate invoices. It also includes an administrative interface for managing products and inventory.
 
-The application integrates a PostgreSQL database with a backend API and supports real-world workflows such as order processing, payment handling, and inventory management.
+The application integrates a MySQL database with a backend API and supports real-world workflows such as order processing, payment handling, and inventory management.
 
 ---
 

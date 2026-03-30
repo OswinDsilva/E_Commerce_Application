@@ -53,7 +53,16 @@ If you use uv:
 uv sync
 ```
 
-## 6. Continue with project-specific work
+## 6. Run the frontend
+
+From the project root, move into the frontend directory and start the Vite development server:
+
+```bash
+cd frontend
+npm run dev
+```
+
+## 7. Continue with project-specific work
 
 Once setup is complete, continue with the remaining backend and frontend tasks.
 

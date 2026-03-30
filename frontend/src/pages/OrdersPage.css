@@ -1,0 +1,46 @@
+.orders-page { padding-bottom: var(--space-4xl); }
+.orders-page__header { margin-bottom: var(--space-xl); }
+.orders-page__header h1 { font-size: clamp(2rem, 4vw, 3rem); }
+.orders-list { display: flex; flex-direction: column; gap: var(--space-lg); }
+.order-card { padding: var(--space-lg); cursor: default; }
+.order-card__header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-md); }
+.order-card__id { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.95rem; color: var(--color-primary); }
+.order-card__body { display: flex; gap: var(--space-xl); margin-bottom: var(--space-md); }
+.order-card__items { flex: 1; }
+.order-card__item-row { font-size: 0.85rem; color: var(--color-muted); padding: 3px 0; }
+.order-card__item-row span { color: var(--color-secondary); font-weight: 600; }
+.order-card__meta { text-align: right; }
+.order-card__date { font-size: 0.78rem; color: var(--color-muted); margin-bottom: 4px; }
+.order-card__total { font-family: var(--font-heading); font-size: 1.5rem; font-weight: 600; color: var(--color-primary); }
+.order-card__footer { display: flex; align-items: center; gap: var(--space-md); border-top: 1px solid var(--color-border); padding-top: var(--space-md); }
+.order-card__detail-link { display: flex; align-items: center; gap: 4px; font-size: 0.8rem; font-weight: 600; color: var(--color-muted); margin-left: auto; transition: color var(--transition-fast); }
+.order-card__detail-link:hover { color: var(--color-primary); }
+
+/* Invoice */
+.invoice-page { padding-bottom: var(--space-4xl); }
+.invoice-page__actions { display: flex; justify-content: space-between; margin-bottom: var(--space-lg); }
+.invoice { padding: var(--space-2xl); cursor: default; }
+.invoice__head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-lg); }
+.invoice__brand { display: flex; align-items: baseline; gap: 5px; margin-bottom: 4px; }
+.invoice__brand-the { font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--color-muted); }
+.invoice__brand-name { font-family: var(--font-heading); font-size: 1.8rem; font-weight: 600; color: var(--color-primary); }
+.invoice__sub { font-size: 0.75rem; color: var(--color-muted); font-style: italic; }
+.invoice__meta { text-align: right; }
+.invoice__meta-row { display: flex; justify-content: flex-end; gap: var(--space-lg); font-size: 0.85rem; padding: 4px 0; color: var(--color-muted); }
+.invoice__meta-row span:last-child { font-weight: 600; color: var(--color-primary); min-width: 120px; text-align: right; }
+.invoice__addresses { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl); margin-bottom: var(--space-lg); }
+.invoice__addr-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-muted); margin-bottom: var(--space-sm); }
+.invoice__addr { font-style: normal; font-size: 0.88rem; line-height: 1.8; color: var(--color-secondary); }
+.invoice__table { width: 100%; border-collapse: collapse; margin-bottom: var(--space-xl); }
+.invoice__table th { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-muted); text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--color-border); }
+.invoice__table td { font-size: 0.9rem; padding: 12px 12px; border-bottom: 1px solid var(--color-border); color: var(--color-secondary); }
+.invoice__table-total td { font-weight: 700; font-size: 1rem; color: var(--color-primary); border-bottom: none; padding-top: var(--space-md); }
+.invoice__footer { text-align: center; padding-top: var(--space-lg); border-top: 1px solid var(--color-border); }
+.invoice__footer p { font-size: 0.9rem; color: var(--color-primary); font-family: var(--font-heading); font-style: italic; }
+.invoice__footer-sub { font-size: 0.78rem; color: var(--color-muted); font-style: normal; font-family: var(--font-body); margin-top: 4px; }
+
+@media print {
+  .invoice-page__actions { display: none; }
+  .navbar, footer { display: none; }
+  .invoice { box-shadow: none; border: none; }
+}

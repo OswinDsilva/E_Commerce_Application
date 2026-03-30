@@ -39,7 +39,16 @@ Or paste the entire `sql/schema.sql` file into your PostgreSQL terminal.
 
 If you are using both development and test databases, run the same command for each database name.
 
-## 5. Install dependencies
+## 5. Create a virtual environment
+
+From the project root, create and activate a Python virtual environment:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+## 6. Install dependencies
 
 If you use pip:
 
@@ -53,7 +62,7 @@ If you use uv:
 uv sync
 ```
 
-## 6. Run the frontend
+## 7. Run the frontend
 
 From the project root, move into the frontend directory and start the Vite development server:
 
@@ -62,7 +71,7 @@ cd frontend
 npm run dev
 ```
 
-## 7. Continue with project-specific work
+## 8. Continue with project-specific work
 
 Once setup is complete, continue with the remaining backend and frontend tasks.
 

@@ -53,12 +53,12 @@ CREATE TABLE `Products` (
     `product_name` VARCHAR(255)   NOT NULL,
     `brand`        VARCHAR(255)   NOT NULL,
     `price`        DECIMAL(10, 2) NOT NULL CHECK (`price` >= 0),
-    `category`     INTEGER        NOT NULL,
+    `category_id`  BIGINT         NOT NULL,
     `description`  TEXT           NOT NULL
 );
 ALTER TABLE `Products` ADD PRIMARY KEY (`p_id`);
 ALTER TABLE `Products` ADD CONSTRAINT `products_category_foreign`
-    FOREIGN KEY (`category`) REFERENCES `categories` (`id`)
+    FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`)
     ON DELETE RESTRICT;
 
 -- INVENTORY (Weak Entity — 1:1 with Products)

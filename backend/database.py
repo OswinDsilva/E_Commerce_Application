@@ -1,8 +1,5 @@
-# This file contains all the database related connection functions
-
 import pymysql
-from .config import DATABASE_URL
-
+from config import DATABASE_URL
 
 def get_connection():
     return pymysql.connect(
@@ -11,14 +8,12 @@ def get_connection():
         password=DATABASE_URL["password"],
         database=DATABASE_URL["database"],
         port=DATABASE_URL.get("port", 3306),
-        cursorclass=pymysql.cursors.DictCursor,  # returns dicts instead of tuples
+        cursorclass=pymysql.cursors.DictCursor,
         autocommit=False
     )
 
-
 def get_db():
     conn = get_connection()
-
     try:
         yield conn
         conn.commit()

@@ -1,24 +1,23 @@
-import pymysql
-from config import DATABASE_URL
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from urllib.parse import quote_plus
 
-def get_connection():
-    return pymysql.connect(
-        host=DATABASE_URL["host"],
-        user=DATABASE_URL["user"],
-        password=DATABASE_URL["password"],
-        database=DATABASE_URL["database"],
-        port=DATABASE_URL.get("port", 3306),
-        cursorclass=pymysql.cursors.DictCursor,
-        autocommit=False
-    )
+DB_USER = "root"
+DB_PASSWORD = quote_plus("DBSProject@1")  # this safely encodes the @ symbol
+DB_HOST = "127.0.0.1"
+DB_PORT = "3306"
+DB_NAME = "ecommerce"
+
+DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(bind=engine)
+Base = declarative_base()
 
 def get_db():
-    conn = get_connection()
+    db = SessionLocal()
     try:
-        yield conn
-        conn.commit()
-    except Exception:
-        conn.rollback()
-        raise
+        yield db
     finally:
-        conn.close()
+        db.close()

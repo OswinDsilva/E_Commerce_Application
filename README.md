@@ -62,7 +62,19 @@ If you use uv:
 uv sync
 ```
 
-## 7. Run the frontend
+The backend uses FastAPI and Uvicorn in addition to the MySQL dependencies already configured in the project.
+
+## 7. Run the backend
+
+From the project root, start the FastAPI app:
+
+```bash
+uvicorn backend.main:app --reload
+```
+
+The backend reads its database settings from `.env`, so make sure the database is configured before starting the server.
+
+## 8. Run the frontend
 
 From the project root, move into the frontend directory and start the Vite development server:
 
@@ -71,7 +83,9 @@ cd frontend
 npm run dev
 ```
 
-## 8. Continue with project-specific work
+The frontend and backend run separately during development.
+
+## 9. Continue with project-specific work
 
 Once setup is complete, continue with the remaining backend and frontend tasks.
 

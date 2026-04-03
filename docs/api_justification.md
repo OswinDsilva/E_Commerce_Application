@@ -17,7 +17,9 @@ This document explains the business need behind each API group.
 
 ## 2. Users (`/users/*`)
 
-**Why:** While users are identified by their session, a dedicated user endpoint allows profile inspection and account deletion. The schema enforces that deleting a user cascades to their orders, so this endpoint also triggers controlled cleanup.
+**Why:** While users are identified by their session, a dedicated user endpoint allows profile inspection and account deletion. In the current Person 1 implementation, these endpoints are self-only and enforce ownership through the active session.
+
+Deleting a user still relies on schema-level cascade behavior for related orders and bank accounts, but the API limits who can trigger that deletion.
 
 ---
 
@@ -50,12 +52,14 @@ This separation prevents the classic "oversell" bug where concurrent reads retur
 
 **Why:** The most critical API group, covering the complete order lifecycle:
 
+Current implementation note: the Person 1 payment endpoint validates order ownership, validates bank account ownership, marks the order `PAID`, and returns invoice data only if an invoice already exists.
+
 | Endpoint | Justification |
 |----------|---------------|
 | `POST /orders` | Creates the order record and **atomically validates + decrements** inventory in a single transaction, preventing overselling |
 | `GET /orders` | Users need to track their purchase history |
 | `GET /orders/:o_id` | Required for checkout confirmation and the invoice view |
-| `POST /orders/:o_id/pay` | Validates bank account ownership, marks order `PAID`, and generates the invoice — all in one atomic operation to prevent partial state |
+| `POST /orders/:o_id/pay` | Validates order ownership, validates bank account ownership, marks the order `PAID`, and returns invoice data if one already exists |
 
 ---
 
@@ -66,6 +70,8 @@ This separation prevents the classic "oversell" bug where concurrent reads retur
 - Allow adding new accounts in-session
 - Prevent UI states where a user can attempt to pay with another user's account (enforced server-side too)
 
+In the current implementation, bank account creation always binds the account to the authenticated user from the session rather than accepting a user ID from the request.
+
 ---
 
 ## 8. Invoices (`/invoices/*`)
@@ -73,3 +79,4 @@ This separation prevents the classic "oversell" bug where concurrent reads retur
 **Why:** Per the PRD, every paid order generates exactly one invoice. Rather than recomputing invoice data on the fly, the invoice is stored and retrieved via this endpoint. This ensures:
 - Invoices remain immutable even if product prices change later
 - The print/download flow always reflects the price at the time of purchase (`price_at_purchase` from `ordered_items`)
+

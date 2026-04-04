@@ -1,10 +1,16 @@
-# All your enviornment variables get extracted here 
-
-from dotenv import load_dotenv
 import os
 from urllib.parse import urlparse, unquote
 
+from dotenv import load_dotenv
+
 load_dotenv()
+
+
+def parse_bool_env(value: str | None, default: bool = False) -> bool:
+    if value is None:
+        return default
+
+    return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
 def parse_database_url(url: str | None):
@@ -27,4 +33,5 @@ def parse_database_url(url: str | None):
 
 DATABASE_URL = parse_database_url(os.getenv("DATABASE_URL"))
 TEST_DATABASE_URL = parse_database_url(os.getenv("TEST_DATABASE_URL"))
+SQL_DEBUG = parse_bool_env(os.getenv("SQL_DEBUG"), default=False)
 

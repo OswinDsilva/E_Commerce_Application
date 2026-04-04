@@ -74,6 +74,14 @@ uvicorn backend.main:app --reload
 
 The backend reads its database settings from `.env`, so make sure the database is configured before starting the server.
 
+If you want to see the SQL executed by the backend while using the frontend or `curl`, add this to `.env` and restart Uvicorn:
+
+```env
+SQL_DEBUG=true
+```
+
+When enabled, the backend terminal will print `SQL DEBUG:` lines for each executed query.
+
 ## 8. Run the frontend
 
 From the project root, move into the frontend directory and start the Vite development server:

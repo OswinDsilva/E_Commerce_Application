@@ -1,35 +1,110 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { CreditCard, CheckCircle, Plus, X } from 'lucide-react'
 import { MOCK_BANK_ACCOUNTS } from '../data/mockData'
+import { createBankAccount, getUserFacingErrorMessage, isBackendUnavailableError, listBankAccounts, payOrder } from '../services/api'
+import { useAuth } from '../context/AuthContext'
 import './PaymentPage.css'
 
 export default function PaymentPage() {
   const { orderId } = useParams()
   const navigate = useNavigate()
+  const { authMode } = useAuth()
   const [accounts, setAccounts] = useState(MOCK_BANK_ACCOUNTS)
   const [selectedAcc, setSelectedAcc] = useState(null)
   const [showAdd, setShowAdd] = useState(false)
   const [newAcc, setNewAcc] = useState({ acc_no: '', bank_name: '', expiry_date: '' })
   const [paid, setPaid] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    let active = true
+
+    const loadAccounts = async () => {
+      if (authMode !== 'backend') {
+        return
+      }
+
+      try {
+        const bankAccounts = await listBankAccounts()
+        if (!active) return
+
+        setAccounts(bankAccounts.length > 0 ? bankAccounts : MOCK_BANK_ACCOUNTS)
+      } catch (loadError) {
+        if (!active) return
+
+        if (!isBackendUnavailableError(loadError)) {
+          setError(getUserFacingErrorMessage(loadError, 'bankAccountsLoad'))
+        }
+
+        setAccounts(MOCK_BANK_ACCOUNTS)
+      }
+    }
+
+    loadAccounts()
+
+    return () => {
+      active = false
+    }
+  }, [authMode])
 
   const handlePay = async () => {
     if (!selectedAcc) return
     setLoading(true)
-    // TODO: POST /api/orders/{orderId}/pay
-    await new Promise(r => setTimeout(r, 1000))
+    setError('')
+
+    try {
+      await payOrder(orderId, { acc_no: selectedAcc.acc_no })
+      setPaid(true)
+      setTimeout(() => navigate(`/invoice/${orderId}`), 2000)
+    } catch (payError) {
+      if (!isBackendUnavailableError(payError)) {
+        setError(getUserFacingErrorMessage(payError, 'orderPayment'))
+        setLoading(false)
+        return
+      }
+
+      setPaid(true)
+      setTimeout(() => navigate(`/invoice/${orderId}`), 2000)
+    }
+
     setLoading(false)
-    setPaid(true)
-    setTimeout(() => navigate(`/invoice/${orderId}`), 2000)
   }
 
   const handleAddAccount = (e) => {
     e.preventDefault()
     if (!newAcc.acc_no || !newAcc.bank_name || !newAcc.expiry_date) return
-    setAccounts(a => [...a, { ...newAcc, acc_no: parseInt(newAcc.acc_no) }])
-    setShowAdd(false)
-    setNewAcc({ acc_no: '', bank_name: '', expiry_date: '' })
+
+    const payload = {
+      ...newAcc,
+      acc_no: parseInt(newAcc.acc_no, 10),
+    }
+
+    if (authMode !== 'backend') {
+      setAccounts(a => [...a, payload])
+      setShowAdd(false)
+      setNewAcc({ acc_no: '', bank_name: '', expiry_date: '' })
+      return
+    }
+
+    setError('')
+    createBankAccount(payload)
+      .then(account => {
+        setAccounts(a => [...a, account])
+        setShowAdd(false)
+        setNewAcc({ acc_no: '', bank_name: '', expiry_date: '' })
+      })
+      .catch(addError => {
+        if (isBackendUnavailableError(addError)) {
+          setAccounts(a => [...a, payload])
+          setShowAdd(false)
+          setNewAcc({ acc_no: '', bank_name: '', expiry_date: '' })
+          return
+        }
+
+        setError(getUserFacingErrorMessage(addError, 'bankAccountsCreate'))
+      })
   }
 
   if (paid) return (
@@ -46,6 +121,7 @@ export default function PaymentPage() {
     <div className="payment-page container">
       <h1>Complete Payment</h1>
       <p className="payment-page__sub">Order #{orderId} · Select a bank account to pay</p>
+      {error && <div className="auth-error" style={{ marginBottom: 'var(--space-md)' }}>{error}</div>}
 
       <div className="payment-layout">
         <div>

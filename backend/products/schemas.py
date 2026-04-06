@@ -1,6 +1,9 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 
+class CategoryCreate(BaseModel):
+    category: str
+
 class ProductCreate(BaseModel):
     product_name: str
     brand: str

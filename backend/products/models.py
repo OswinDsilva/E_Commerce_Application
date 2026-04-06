@@ -1,9 +1,7 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Text, SmallInteger
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-import sys
-sys.path.append("..")
-from database import Base
+from backend.database import Base
 
 class Category(Base):
     __tablename__ = "categories"

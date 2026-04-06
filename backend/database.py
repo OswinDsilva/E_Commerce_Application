@@ -35,6 +35,9 @@ class DebugDictCursor(pymysql.cursors.DictCursor):
 
 
 def get_connection():
+    if DATABASE_URL is None:
+        raise RuntimeError("DATABASE_URL is not configured")
+
     return pymysql.connect(
         host=DATABASE_URL["host"],
         user=DATABASE_URL["user"],

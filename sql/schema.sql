@@ -124,3 +124,12 @@ ALTER TABLE `ordered_items` ADD CONSTRAINT `ordered_items_o_id_foreign`
 ALTER TABLE `ordered_items` ADD CONSTRAINT `ordered_items_p_id_foreign`
     FOREIGN KEY (`p_id`) REFERENCES `Products` (`p_id`)
     ON DELETE CASCADE;
+
+-- SEED DATA
+
+INSERT INTO `roles` (`id`, `role`)
+VALUES
+    (1, 'USER'),
+    (2, 'ADMIN')
+ON DUPLICATE KEY UPDATE
+    `role` = VALUES(`role`);

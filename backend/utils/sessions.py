@@ -1,19 +1,18 @@
 import secrets
 import threading
-
-from ..schemas.users import AuthenticatedUser, UserOut
+from typing import Any
 
 
 _SESSIONS: dict[str, int] = {}
 _LOCK = threading.RLock()
 
 
-def create_session(user: UserOut | AuthenticatedUser | dict[str, object]) -> str:
-    session_token = secrets.token_urlsafe(32)
+def create_session(user: Any) -> str:
     user_id = getattr(user, "u_id", None)
     if user_id is None:
         user_id = user["u_id"]
 
+    session_token = secrets.token_urlsafe(32)
     with _LOCK:
         _SESSIONS[session_token] = int(user_id)
     return session_token

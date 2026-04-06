@@ -2,7 +2,11 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
 
+from pymysql.err import MySQLError
+
 from ..errors import ApiError
+
+DB_ERROR_PREFIX = "APP_ERROR"
 
 
 def require_text(value: Any, field_name: str) -> str:
@@ -40,6 +44,64 @@ def get_next_id(connection: Any, table_name: str, id_column: str) -> int:
         cursor.execute(query)
         row = cursor.fetchone()
     return int(row["next_id"])
+
+
+def _drain_result_sets(cursor: Any) -> None:
+    nextset = getattr(cursor, "nextset", None)
+    if not callable(nextset):
+        return
+
+    while cursor.nextset():
+        continue
+
+
+def _parse_db_api_error(exc: MySQLError) -> ApiError | None:
+    message = ""
+    if getattr(exc, "args", None):
+        message = str(exc.args[-1])
+    else:
+        message = str(exc)
+
+    prefix = f"{DB_ERROR_PREFIX}|"
+    if not message.startswith(prefix):
+        return None
+
+    try:
+        _, code, status_code, detail = message.split("|", 3)
+        return ApiError(detail, code, int(status_code))
+    except (TypeError, ValueError):
+        return None
+
+
+def raise_api_error_from_db(exc: MySQLError) -> None:
+    parsed = _parse_db_api_error(exc)
+    if parsed is not None:
+        raise parsed from exc
+    raise exc
+
+
+def call_procedure(
+    connection: Any,
+    statement: str,
+    params: tuple[Any, ...] = (),
+    *,
+    fetch: str = "none",
+) -> Any:
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(statement, params)
+
+            if fetch == "one":
+                result = cursor.fetchone()
+            elif fetch == "all":
+                result = cursor.fetchall()
+            else:
+                result = None
+
+            _drain_result_sets(cursor)
+            return result
+    except MySQLError as exc:
+        raise_api_error_from_db(exc)
 
 
 def serialize_datetime(value: Any) -> Any:

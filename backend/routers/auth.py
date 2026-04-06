@@ -1,9 +1,9 @@
-from typing import Any
-
-from fastapi import APIRouter, Body, Depends, Request, Response, status
+from fastapi import APIRouter, Depends, Request, Response, status
 from pymysql.connections import Connection
 
 from ..database import get_db
+from ..schemas.auth import LoginRequest, RegisterRequest
+from ..schemas.users import UserResponse
 from ..services.auth_service import (
     login_user,
     logout_user,
@@ -26,28 +26,28 @@ def _set_session_cookie(response: Response, session_token: str) -> None:
     )
 
 
-@router.post("/register", status_code=status.HTTP_201_CREATED)
+@router.post("/register", status_code=status.HTTP_201_CREATED, response_model=UserResponse)
 def register(
     response: Response,
-    payload: dict[str, Any] = Body(...),
+    payload: RegisterRequest,
     db: Connection = Depends(get_db),
-) -> dict[str, Any]:
+) -> UserResponse:
     user = register_user(db, payload)
     session_token = create_session(user)
     _set_session_cookie(response, session_token)
-    return {"user": user}
+    return UserResponse(user=user)
 
 
-@router.post("/login")
+@router.post("/login", response_model=UserResponse)
 def login(
     response: Response,
-    payload: dict[str, Any] = Body(...),
+    payload: LoginRequest,
     db: Connection = Depends(get_db),
-) -> dict[str, Any]:
-    user = login_user(db, payload.get("username"), payload.get("password"))
+) -> UserResponse:
+    user = login_user(db, payload)
     session_token = create_session(user)
     _set_session_cookie(response, session_token)
-    return {"user": user}
+    return UserResponse(user=user)
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
@@ -61,10 +61,10 @@ def logout(
     return response
 
 
-@router.get("/me")
+@router.get("/me", response_model=UserResponse)
 def me(
     request: Request,
     db: Connection = Depends(get_db),
-) -> dict[str, Any]:
+) -> UserResponse:
     user = require_auth(request, db)
-    return {"user": user}
+    return UserResponse(user=user)

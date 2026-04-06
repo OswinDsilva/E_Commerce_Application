@@ -27,7 +27,7 @@ Create a `.env` file and copy the contents from `.env.example` into it.
 3. Create your database (for example, one for development and optionally one for testing).
 4. Update the database values in `.env` with your MySQL credentials.
 
-## 4. Apply the schema
+## 4. Apply the schema and database routines
 
 Run the schema script from the project root:
 
@@ -35,7 +35,23 @@ Run the schema script from the project root:
 mysql -u your_user -p your_database_name < sql/schema.sql
 ```
 
-Or paste the entire `sql/schema.sql` file into your MySQL terminal.
+Then apply the Person 1 stored procedures:
+
+```bash
+mysql -u your_user -p your_database_name < sql/procedures.sql
+```
+
+And finally apply the trigger definitions:
+
+```bash
+mysql -u your_user -p your_database_name < sql/triggers.sql
+```
+
+Or paste the SQL files into your MySQL terminal in this order:
+
+1. `sql/schema.sql`
+2. `sql/procedures.sql`
+3. `sql/triggers.sql`
 
 If you are using both development and test databases, run the same command for each database name.
 

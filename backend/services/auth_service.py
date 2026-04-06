@@ -1,21 +1,26 @@
 from typing import Any
 
 from ..errors import ApiError
+from ..schemas.auth import LoginRequest, RegisterRequest
+from ..schemas.users import AuthenticatedUser, UserOut
 from ..utils.passwords import hash_password, verify_password
 from ..utils.sessions import destroy_session, get_session_user_id
-from .common import get_next_id, require_text, serialize_datetime
+from .common import call_procedure, get_next_id, require_text
 
 
-def serialize_user(row: dict[str, Any]) -> dict[str, Any]:
-    return {
-        "u_id": row["u_id"],
-        "username": row["username"],
-        "email": row["email"],
-        "phone": row["phone"],
-        "created_at": serialize_datetime(row["created_at"]),
-        "role_id": row["role_id"],
-        "role": row["role"],
-    }
+def _build_user_model(row: dict[str, Any], *, authenticated: bool = False) -> UserOut:
+    model_cls = AuthenticatedUser if authenticated else UserOut
+    return model_cls.model_validate(
+        {
+            "u_id": row["u_id"],
+            "username": row["username"],
+            "email": row["email"],
+            "phone": row["phone"],
+            "created_at": row["created_at"],
+            "role_id": row["role_id"],
+            "role": row["role"],
+        }
+    )
 
 
 def _fetch_user_by_username(
@@ -85,11 +90,11 @@ def _get_default_user_role_id(connection: Any) -> int:
     return int(row["id"])
 
 
-def _validate_register_payload(payload: dict[str, Any]) -> tuple[str, str, str, str]:
-    username = require_text(payload.get("username"), "username")
-    password = require_text(payload.get("password"), "password")
-    email = require_text(payload.get("email"), "email")
-    phone = require_text(payload.get("phone"), "phone")
+def _validate_register_payload(payload: RegisterRequest) -> tuple[str, str, str, str]:
+    username = require_text(payload.username, "username")
+    password = require_text(payload.password, "password")
+    email = require_text(payload.email, "email")
+    phone = require_text(payload.phone, "phone")
 
     if len(password) < 6:
         raise ApiError(
@@ -104,55 +109,34 @@ def _validate_register_payload(payload: dict[str, Any]) -> tuple[str, str, str, 
     return username, password, email, phone
 
 
-def register_user(connection: Any, data: dict[str, Any]) -> dict[str, Any]:
+def register_user(connection: Any, data: RegisterRequest) -> UserOut:
     username, password, email, phone = _validate_register_payload(data)
-
-    with connection.cursor() as cursor:
-        cursor.execute(
-            """
-            SELECT username, email
-            FROM Users
-            WHERE username = %s OR email = %s
-            LIMIT 1
-            """,
-            (username, email),
-        )
-        existing = cursor.fetchone()
-
-    if existing:
-        if existing["username"] == username:
-            raise ApiError("Username already exists", "BAD_REQUEST", 400)
-        raise ApiError("Email already exists", "BAD_REQUEST", 400)
 
     u_id = get_next_id(connection, "Users", "u_id")
     role_id = _get_default_user_role_id(connection)
     password_hash = hash_password(password)
 
-    with connection.cursor() as cursor:
-        cursor.execute(
-            """
-            INSERT INTO Users (u_id, username, password_hash, email, phone, role_id)
-            VALUES (%s, %s, %s, %s, %s, %s)
-            """,
-            (u_id, username, password_hash, email, phone, role_id),
-        )
-
-    user = fetch_user_by_id(connection, u_id)
+    user = call_procedure(
+        connection,
+        "CALL sp_register_user(%s, %s, %s, %s, %s, %s)",
+        (u_id, username, password_hash, email, phone, role_id),
+        fetch="one",
+    )
     if not user:
         raise ApiError("Unable to create user", "SERVER_ERROR", 500)
 
-    return serialize_user(user)
+    return _build_user_model(user, authenticated=True)
 
 
-def login_user(connection: Any, username: Any, password: Any) -> dict[str, Any]:
-    safe_username = require_text(username, "username")
-    safe_password = require_text(password, "password")
+def login_user(connection: Any, credentials: LoginRequest) -> AuthenticatedUser:
+    safe_username = require_text(credentials.username, "username")
+    safe_password = require_text(credentials.password, "password")
     user = _fetch_user_by_username(connection, safe_username, include_password=True)
 
     if not user or not verify_password(safe_password, user["password_hash"]):
         raise ApiError("Invalid username or password", "UNAUTHORIZED", 401)
 
-    return serialize_user(user)
+    return _build_user_model(user, authenticated=True)
 
 
 def logout_user(session_token: str | None) -> None:
@@ -160,7 +144,7 @@ def logout_user(session_token: str | None) -> None:
         destroy_session(session_token)
 
 
-def get_current_user(connection: Any, session_token: str | None) -> dict[str, Any]:
+def get_current_user(connection: Any, session_token: str | None) -> AuthenticatedUser:
     if not session_token:
         raise ApiError("Authentication required", "UNAUTHORIZED", 401)
 
@@ -173,4 +157,4 @@ def get_current_user(connection: Any, session_token: str | None) -> dict[str, An
         destroy_session(session_token)
         raise ApiError("Authentication required", "UNAUTHORIZED", 401)
 
-    return serialize_user(user)
+    return _build_user_model(user, authenticated=True)

@@ -1,9 +1,9 @@
-from typing import Any
-
-from fastapi import APIRouter, Body, Depends, Request
+from fastapi import APIRouter, Depends, Request
 from pymysql.connections import Connection
 
 from ..database import get_db
+from ..schemas.payments import PayOrderRequest, PayOrderResponse
+from ..schemas.users import AuthenticatedUser
 from ..services.payment_service import pay_for_order
 from ..utils.auth import require_auth
 
@@ -11,15 +11,15 @@ from ..utils.auth import require_auth
 router = APIRouter(prefix="/orders", tags=["payments"])
 
 
-def _current_user(request: Request, db: Connection = Depends(get_db)) -> dict[str, Any]:
+def _current_user(request: Request, db: Connection = Depends(get_db)) -> AuthenticatedUser:
     return require_auth(request, db)
 
 
-@router.post("/{o_id}/pay")
+@router.post("/{o_id}/pay", response_model=PayOrderResponse)
 def pay_order(
     o_id: int,
-    payload: dict[str, Any] = Body(...),
-    current_user: dict[str, Any] = Depends(_current_user),
+    payload: PayOrderRequest,
+    current_user: AuthenticatedUser = Depends(_current_user),
     db: Connection = Depends(get_db),
-) -> dict[str, Any]:
-    return pay_for_order(db, o_id, payload.get("acc_no"), current_user)
+) -> PayOrderResponse:
+    return pay_for_order(db, o_id, payload, current_user)

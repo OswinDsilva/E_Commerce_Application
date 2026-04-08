@@ -16,7 +16,6 @@ This document outlines the tables used for the application, along with their fie
 
 **Constraints:**
 - Primary Key: `id`
-- Unique: `role`
 - NOT NULL: `role`
 
 ---
@@ -29,7 +28,6 @@ This document outlines the tables used for the application, along with their fie
 
 **Constraints:**
 - Primary Key: `id`
-- Unique: `category`
 - NOT NULL: `category`
 
 ---
@@ -52,6 +50,7 @@ This document outlines the tables used for the application, along with their fie
 - Foreign Key: `role_id` → `roles(id)` ON DELETE RESTRICT
 - Unique: `username`
 - Unique: `email`
+- Default: `created_at = CURRENT_TIMESTAMP`
 - NOT NULL: `username`, `password_hash`, `email`, `phone`, `created_at`, `role_id`
 
 ---
@@ -78,14 +77,15 @@ This document outlines the tables used for the application, along with their fie
 - `product_name` – VARCHAR(255)
 - `brand` – VARCHAR(255)
 - `price` – DECIMAL(10,2)
-- `category` – INTEGER
+- `category_id` – BIGINT
 - `description` – TEXT
+- `thumbnail_url` – VARCHAR(1024) (nullable)
 
 **Constraints:**
 - Primary Key: `p_id`
-- Foreign Key: `category` → `categories(id)` ON DELETE RESTRICT
+- Foreign Key: `category_id` → `categories(id)` ON DELETE RESTRICT
 - CHECK: `price ≥ 0`
-- NOT NULL: `product_name`, `brand`, `price`, `category`, `description`
+- NOT NULL: `product_name`, `brand`, `price`, `category_id`, `description`
 
 ---
 
@@ -94,10 +94,12 @@ This document outlines the tables used for the application, along with their fie
 **Fields:**
 - `o_id` – INTEGER
 - `order_date` – DATE
-- `status` – VARCHAR(50)
+- `status` – VARCHAR(255)
 - `total_amount` – DECIMAL(10,2)
 - `u_id` – INTEGER
-- `acc_no` – INTEGER
+- `acc_no` – INTEGER (nullable)
+- `shipping_address` – TEXT (nullable)
+- `billing_address` – TEXT (nullable)
 
 **Constraints:**
 - Primary Key: `o_id`
@@ -141,6 +143,7 @@ This document outlines the tables used for the application, along with their fie
 - Primary Key: `p_id`
 - Foreign Key: `p_id` → `Products(p_id)` ON DELETE CASCADE
 - CHECK: `quantity ≥ 0`
+- Default: `last_updated = CURRENT_TIMESTAMP`
 - NOT NULL: `quantity`, `last_updated`
 
 ---

@@ -10,21 +10,21 @@ This document provides details for the Entity Relation diagram along with the re
 #### Type: Strong entity
 - Used for storing user information.
 - Also used to link a user to their bank account if they wish to link it.
-- Each user can own __0 or more Bank accounts__, and can also place __0 or more orders__.
+- Each user can own __0 or more bank accounts__, and can also place __0 or more orders__.
 
 ### 2. Bank Account
 #### Type: Strong entity
-- Used for storing a users banking information
+- Used for storing a user's banking information.
 - Each bank account must be linked to __1 user__, and each bank account can be used to make __0 or more order payments__.
 
 ### 3. Orders
 #### Type: Strong entity
 - Used for keeping track of user orders
-- Each order is linked to exactly __1 user__, can be paid by exactly __1 bank account__, __can have 1 or more products__, and has exactly __1 invoice__.
+- Each order is linked to exactly __1 user__, may be paid by __0 or 1 bank account__, can have __1 or more products__, and has exactly __1 invoice__.
 
 ### 4. Invoice
 #### Type: Strong entity
-- Used for maintaing invoice related to each order
+- Used for maintaining invoice information related to each order.
 - Each invoice is linked to exactly __1 order__.
 
 ### 5. Products
@@ -34,7 +34,7 @@ This document provides details for the Entity Relation diagram along with the re
 
 ### 6. Inventory
 #### Type: Weak entity
-- Used for maintaining a track of how much inventory of the product is available.
+- Used for maintaining a track of how much inventory of a product is available.
 - Each inventory log corresponds to exactly __1 product__.
 
 
@@ -46,12 +46,12 @@ This document provides details for the Entity Relation diagram along with the re
 
 
 ### 2. _User_ owns _Bank account_
-#### __Cardinaltiy__: (Users) One to Many (Bank Accounts)
+#### __Cardinality__: (Users) One to Many (Bank Accounts)
 #### __Type__: Total participation on the many (Bank Accounts) side.
 
 ### 3. _Order_ paid using _Bank account_
-#### __Cardinaltiy__: (Orders) Many to One (Bank Accounts)
-#### __Type__: Total participation on the many (Orders) side.
+#### __Cardinality__: (Orders) Zero-or-one to One (Bank Accounts), optional on the Orders side
+#### __Type__: Partial participation on the Orders side (because `acc_no` is nullable in the schema).
 
 ### 4. _Order_ generates _Invoice_
 #### __Cardinality__: (Orders) One to One (Invoice)

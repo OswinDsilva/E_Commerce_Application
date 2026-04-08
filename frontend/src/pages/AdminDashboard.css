@@ -25,6 +25,24 @@
 .admin__tab:hover { color: var(--color-primary); background: var(--color-bg-2); }
 .admin__tab--active { color: var(--color-primary); border-bottom-color: var(--color-cta); }
 
+.alert {
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  padding: 12px 14px;
+  font-size: 0.86rem;
+  color: var(--color-secondary);
+  background: var(--color-bg-2);
+}
+.alert-error { border-color: #fecaca; background: #fef2f2; color: #991b1b; }
+.alert-warning { border-color: #fde68a; background: #fffbeb; color: #92400e; }
+.admin-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+.admin-alert__actions { display: flex; gap: 8px; }
+
 .admin-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: var(--space-lg); margin-bottom: var(--space-xl); }
 .admin-stat {
   display: flex;
@@ -57,8 +75,11 @@
 .admin-add-form { max-width: 700px; width: 100%; padding: var(--space-2xl); display: flex; flex-direction: column; gap: var(--space-md); }
 .admin-add-form h3 { font-family: var(--font-heading); font-size: 1.5rem; color: var(--color-primary); margin-bottom: var(--space-sm); }
 .admin-add-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); }
+.admin-add-grid--single { grid-template-columns: 1fr; }
 
 @media (max-width: 768px) {
+  .admin__tabs { flex-wrap: wrap; }
   .admin-stats { grid-template-columns: 1fr 1fr; }
+  .admin-alert { flex-direction: column; align-items: flex-start; }
   .admin-add-grid { grid-template-columns: 1fr; }
 }

@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { getUserFacingErrorMessage } from '../services/api'
 import './AuthPage.css'
 
 export default function LoginPage() {
@@ -17,18 +18,14 @@ export default function LoginPage() {
     setError('')
     if (!form.username || !form.password) { setError('Please fill in all fields.'); return }
     setLoading(true)
-    // TODO: POST /api/auth/login
-    await new Promise(r => setTimeout(r, 800))
-    // Mock: treat any login as valid; role depends on username
-    const mockUser = {
-      u_id: 1,
-      username: form.username,
-      email: `${form.username}@example.com`,
-      role: form.username.toLowerCase() === 'admin' ? 'ADMIN' : 'USER',
+    try {
+      await login({ username: form.username, password: form.password })
+      navigate('/')
+    } catch (err) {
+      setError(getUserFacingErrorMessage(err, 'authLogin'))
+    } finally {
+      setLoading(false)
     }
-    login(mockUser)
-    setLoading(false)
-    navigate('/')
   }
 
   return (

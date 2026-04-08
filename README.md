@@ -27,7 +27,7 @@ Create a `.env` file and copy the contents from `.env.example` into it.
 3. Create your database (for example, one for development and optionally one for testing).
 4. Update the database values in `.env` with your MySQL credentials.
 
-## 4. Apply the schema
+## 4. Apply the schema and database routines
 
 Run the schema script from the project root:
 
@@ -35,7 +35,23 @@ Run the schema script from the project root:
 mysql -u your_user -p your_database_name < sql/schema.sql
 ```
 
-Or paste the entire `sql/schema.sql` file into your MySQL terminal.
+Then apply the Person 1 stored procedures:
+
+```bash
+mysql -u your_user -p your_database_name < sql/procedures.sql
+```
+
+And finally apply the trigger definitions:
+
+```bash
+mysql -u your_user -p your_database_name < sql/triggers.sql
+```
+
+Or paste the SQL files into your MySQL terminal in this order:
+
+1. `sql/schema.sql`
+2. `sql/procedures.sql`
+3. `sql/triggers.sql`
 
 If you are using both development and test databases, run the same command for each database name.
 
@@ -62,7 +78,27 @@ If you use uv:
 uv sync
 ```
 
-## 7. Run the frontend
+The backend uses FastAPI and Uvicorn in addition to the MySQL dependencies already configured in the project.
+
+## 7. Run the backend
+
+From the project root, start the FastAPI app:
+
+```bash
+uvicorn backend.main:app --reload
+```
+
+The backend reads its database settings from `.env`, so make sure the database is configured before starting the server.
+
+If you want to see the SQL executed by the backend while using the frontend or `curl`, add this to `.env` and restart Uvicorn:
+
+```env
+SQL_DEBUG=true
+```
+
+When enabled, the backend terminal will print `SQL DEBUG:` lines for each executed query.
+
+## 8. Run the frontend
 
 From the project root, move into the frontend directory and start the Vite development server:
 
@@ -71,7 +107,9 @@ cd frontend
 npm run dev
 ```
 
-## 8. Continue with project-specific work
+The frontend and backend run separately during development.
+
+## 9. Continue with project-specific work
 
 Once setup is complete, continue with the remaining backend and frontend tasks.
 

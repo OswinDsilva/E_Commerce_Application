@@ -2,6 +2,7 @@
 
 Base URL: `https://api.theatelier.com/api`
 Auth: All protected routes require a session cookie (`Set-Cookie` on login).
+Current implementation note: the Person 1 backend currently implements auth, users, bank accounts, and payment ownership checks.
 
 ---
 
@@ -9,7 +10,7 @@ Auth: All protected routes require a session cookie (`Set-Cookie` on login).
 
 | Method | Endpoint | Body | Response | Description |
 |--------|----------|------|----------|-------------|
-| `POST` | `/auth/register` | `{ username, password, email, phone }` | `{ user }` | Register a new user |
+| `POST` | `/auth/register` | `{ username, password, email, phone }` | `201 { user }` | Register a new user, create a session, and set a session cookie |
 | `POST` | `/auth/login` | `{ username, password }` | `{ user }` | Login and set session cookie |
 | `POST` | `/auth/logout` | — | `204` | Destroy session |
 | `GET` | `/auth/me` | — | `{ user }` | Get current session user |
@@ -18,10 +19,12 @@ Auth: All protected routes require a session cookie (`Set-Cookie` on login).
 
 ## Users
 
+Current implementation note: these endpoints are self-only in the current Person 1 backend.
+
 | Method | Endpoint | Body | Response | Description |
 |--------|----------|------|----------|-------------|
-| `GET` | `/users/:u_id` | — | `{ user }` | Get user profile |
-| `DELETE` | `/users/:u_id` | — | `204` | Delete user (own or admin) |
+| `GET` | `/users/:u_id` | — | `{ user }` | Get own user profile |
+| `DELETE` | `/users/:u_id` | — | `204` | Delete own user account |
 
 ---
 
@@ -60,7 +63,7 @@ Auth: All protected routes require a session cookie (`Set-Cookie` on login).
 | `POST` | `/orders` | `{ items: [{ p_id, quantity }], shipping_address, billing_address }` | `{ order }` | Create order, deduct inventory |
 | `GET` | `/orders` | — | `{ orders[] }` | Get current user's orders |
 | `GET` | `/orders/:o_id` | — | `{ order, items[] }` | Get order detail with line items |
-| `POST` | `/orders/:o_id/pay` | `{ acc_no }` | `{ order, invoice }` | Pay for order, generate invoice |
+| `POST` | `/orders/:o_id/pay` | `{ acc_no }` | `{ order, invoice }` | Validate ownership, mark the order as `PAID`, and return invoice data if it already exists |
 
 ---
 
@@ -69,7 +72,7 @@ Auth: All protected routes require a session cookie (`Set-Cookie` on login).
 | Method | Endpoint | Body | Response | Description |
 |--------|----------|------|----------|-------------|
 | `GET` | `/bank-accounts` | — | `{ accounts[] }` | Get own bank accounts |
-| `POST` | `/bank-accounts` | `{ acc_no, bank_name, expiry_date }` | `{ account }` | Add bank account |
+| `POST` | `/bank-accounts` | `{ acc_no, bank_name, expiry_date }` | `201 { account }` | Add a bank account for the authenticated user |
 | `DELETE` | `/bank-accounts/:acc_no` | — | `204` | Remove bank account |
 
 ---
@@ -78,7 +81,7 @@ Auth: All protected routes require a session cookie (`Set-Cookie` on login).
 
 | Method | Endpoint | Response | Description |
 |--------|----------|----------|-------------|
-| `GET` | `/invoices/:o_id` | `{ invoice, order, items[] }` | Get invoice by order ID |
+| `GET` | `/orders/:o_id/invoice` | `{ order, invoice }` | Get generated invoice for an order |
 
 ---
 
@@ -88,4 +91,5 @@ Auth: All protected routes require a session cookie (`Set-Cookie` on login).
 { "error": "Human-readable message", "code": "MACHINE_CODE" }
 ```
 
-Common codes: `UNAUTHORIZED`, `NOT_FOUND`, `OUT_OF_STOCK`, `ALREADY_PAID`, `INVALID_ACCOUNT`
+Common codes: `UNAUTHORIZED`, `NOT_FOUND`, `OUT_OF_STOCK`, `ALREADY_PAID`, `INVALID_ACCOUNT`, `BAD_REQUEST`
+

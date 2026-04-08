@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { Search, SlidersHorizontal, X } from 'lucide-react'
+import { listProducts, listCategories, isBackendUnavailableError, getUserFacingErrorMessage } from '../services/api'
 import { PRODUCTS, CATEGORIES } from '../data/mockData'
 import ProductCard from '../components/ProductCard'
 import './ProductsPage.css'
@@ -9,16 +10,47 @@ export default function ProductsPage() {
   const [selectedCat, setSelectedCat] = useState(0)
   const [sortBy, setSortBy] = useState('default')
   const [showFilters, setShowFilters] = useState(false)
+  const [products, setProducts] = useState(PRODUCTS)
+  const [categories, setCategories] = useState(CATEGORIES)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const [productsData, categoriesData] = await Promise.all([
+          listProducts(),
+          listCategories(),
+        ])
+        setProducts(productsData)
+        setCategories(categoriesData)
+      } catch (err) {
+        if (isBackendUnavailableError(err)) {
+          // Fallback to mock data
+          setProducts(PRODUCTS)
+          setCategories(CATEGORIES)
+        } else {
+          setError(getUserFacingErrorMessage(err, 'productsList'))
+        }
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
 
   const filtered = useMemo(() => {
-    let list = [...PRODUCTS]
+    let list = [...products]
     if (search) list = list.filter(p => p.product_name.toLowerCase().includes(search.toLowerCase()) || p.brand.toLowerCase().includes(search.toLowerCase()))
-    if (selectedCat) list = list.filter(p => p.category === selectedCat)
+    if (selectedCat) list = list.filter(p => p.category_id === selectedCat)
     if (sortBy === 'price-asc')  list.sort((a,b) => a.price - b.price)
     if (sortBy === 'price-desc') list.sort((a,b) => b.price - a.price)
     if (sortBy === 'name')       list.sort((a,b) => a.product_name.localeCompare(b.product_name))
     return list
-  }, [search, selectedCat, sortBy])
+  }, [search, selectedCat, sortBy, products])
 
   return (
     <div className="products-page container">
@@ -27,8 +59,14 @@ export default function ProductsPage() {
           <p className="section-eyebrow">Curated Luxury</p>
           <h1 className="products-page__title">The Collection</h1>
         </div>
-        <p className="products-page__count">{filtered.length} pieces</p>
+        <p className="products-page__count">{loading ? '...' : filtered.length} pieces</p>
       </div>
+
+      {error && (
+        <div className="alert alert-error" style={{ marginBottom: '1.5rem' }}>
+          {error}
+        </div>
+      )}
 
       {/* Toolbar */}
       <div className="products-page__toolbar">
@@ -68,7 +106,7 @@ export default function ProductsPage() {
             className={`products-page__cat-btn ${selectedCat === 0 ? 'active' : ''}`}
             onClick={() => setSelectedCat(0)}
           >All</button>
-          {CATEGORIES.map(c => (
+          {categories.map(c => (
             <button
               key={c.id}
               className={`products-page__cat-btn ${selectedCat === c.id ? 'active' : ''}`}

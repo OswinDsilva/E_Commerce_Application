@@ -65,14 +65,14 @@ export default function Navbar() {
               </button>
               {userMenuOpen && (
                 <div className="navbar__dropdown animate-fadeIn">
+                  {isAdmin && (
+                    <Link to="/admin" className="navbar__dropdown-item">
+                      <LayoutDashboard size={15} /> Dashboard
+                    </Link>
+                  )}
                   <Link to="/orders" className="navbar__dropdown-item">
                     <Package size={15} /> My Orders
                   </Link>
-                  {isAdmin && (
-                    <Link to="/admin" className="navbar__dropdown-item">
-                      <LayoutDashboard size={15} /> Admin Dashboard
-                    </Link>
-                  )}
                   <hr className="navbar__dropdown-divider" />
                   <button className="navbar__dropdown-item navbar__dropdown-item--danger" onClick={handleLogout}>
                     <LogOut size={15} /> Sign Out

@@ -2,10 +2,11 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { getUserFacingErrorMessage } from '../services/api'
 import './AuthPage.css'
 
 export default function RegisterPage() {
-  const { login } = useAuth()
+  const { register } = useAuth()
   const navigate = useNavigate()
   const [form, setForm] = useState({ username: '', email: '', phone: '', password: '', confirm: '' })
   const [showPw, setShowPw] = useState(false)
@@ -21,12 +22,19 @@ export default function RegisterPage() {
     if (form.password !== form.confirm) { setError('Passwords do not match.'); return }
     if (form.password.length < 6) { setError('Password must be at least 6 characters.'); return }
     setLoading(true)
-    // TODO: POST /api/auth/register
-    await new Promise(r => setTimeout(r, 900))
-    const newUser = { u_id: Date.now(), username: form.username, email: form.email, role: 'USER' }
-    login(newUser)
-    setLoading(false)
-    navigate('/')
+    try {
+      await register({
+        username: form.username,
+        email: form.email,
+        phone: form.phone,
+        password: form.password,
+      })
+      navigate('/')
+    } catch (err) {
+      setError(getUserFacingErrorMessage(err, 'authRegister'))
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (

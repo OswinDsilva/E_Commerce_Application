@@ -53,12 +53,13 @@ CREATE TABLE `Products` (
     `product_name` VARCHAR(255)   NOT NULL,
     `brand`        VARCHAR(255)   NOT NULL,
     `price`        DECIMAL(10, 2) NOT NULL CHECK (`price` >= 0),
-    `category`     INTEGER        NOT NULL,
-    `description`  TEXT           NOT NULL
+    `category_id`  BIGINT         NOT NULL,
+    `description`  TEXT           NOT NULL,
+    `thumbnail_url` VARCHAR(1024) NULL
 );
 ALTER TABLE `Products` ADD PRIMARY KEY (`p_id`);
 ALTER TABLE `Products` ADD CONSTRAINT `products_category_foreign`
-    FOREIGN KEY (`category`) REFERENCES `categories` (`id`)
+    FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`)
     ON DELETE RESTRICT;
 
 -- INVENTORY (Weak Entity — 1:1 with Products)
@@ -83,7 +84,9 @@ CREATE TABLE `Orders` (
     ),
     `total_amount` DECIMAL(10, 2) NOT NULL CHECK (`total_amount` >= 0),
     `u_id`         INTEGER        NOT NULL,
-    `acc_no`       INTEGER        NULL
+    `acc_no`       INTEGER        NULL,
+    `shipping_address` TEXT       NULL,
+    `billing_address`  TEXT       NULL
 );
 ALTER TABLE `Orders` ADD PRIMARY KEY (`o_id`);
 ALTER TABLE `Orders` ADD CONSTRAINT `orders_u_id_foreign`
@@ -124,3 +127,30 @@ ALTER TABLE `ordered_items` ADD CONSTRAINT `ordered_items_o_id_foreign`
 ALTER TABLE `ordered_items` ADD CONSTRAINT `ordered_items_p_id_foreign`
     FOREIGN KEY (`p_id`) REFERENCES `Products` (`p_id`)
     ON DELETE CASCADE;
+
+-- SEED DATA
+
+INSERT INTO `roles` (`id`, `role`)
+VALUES
+    (1, 'USER'),
+    (2, 'ADMIN')
+ON DUPLICATE KEY UPDATE
+    `role` = VALUES(`role`);
+
+-- Default admin login password: admin123
+INSERT INTO `Users` (`u_id`, `username`, `password_hash`, `email`, `phone`, `role_id`)
+VALUES
+    (
+        1,
+        'admin',
+        'pbkdf2_sha256$100000$276b73592aa043f65069b3fa6197e5b6$d6b7faba7705aea6ee33459b3b424bee573dac471de2cb1985fc1b5e34b7f5fd',
+        'admin@atelier.local',
+        '9999999999',
+        2
+    )
+ON DUPLICATE KEY UPDATE
+    `username` = VALUES(`username`),
+    `password_hash` = VALUES(`password_hash`),
+    `email` = VALUES(`email`),
+    `phone` = VALUES(`phone`),
+    `role_id` = VALUES(`role_id`);

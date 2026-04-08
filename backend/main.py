@@ -1,21 +1,22 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, Request
 from fastapi.exceptions import HTTPException
-from backend.products.routes import router as products_router
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+
 from .errors import ApiError
-from .routers import auth, bank_accounts, payments, users
+from .routers import auth, bank_accounts, payments, products, users
 
 app = FastAPI(title="The Atelier API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000", "http://localhost:5173"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.include_router(products_router)
+app.include_router(products.router)
+app.include_router(products.category_router)
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(bank_accounts.router)

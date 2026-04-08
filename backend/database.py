@@ -31,11 +31,6 @@ class DebugDictCursor(pymysql.cursors.DictCursor):
             print(f"SQL DEBUG PARAM SETS: {len(args)}")
         return super().executemany(query, args)
 
-DB_USER = "root"
-DB_PASSWORD = "DBSProject@1"
-DB_HOST = "127.0.0.1"
-DB_PORT = 3306
-DB_NAME = "ecommerce"
 
 def get_connection():
     if DATABASE_URL is None:

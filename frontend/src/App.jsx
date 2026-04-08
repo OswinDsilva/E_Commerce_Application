@@ -1,5 +1,5 @@
 import React from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Navigate, Routes, Route, useLocation } from 'react-router-dom'
 import Layout from './components/Layout'
 import HomePage from './pages/HomePage'
 import ProductsPage from './pages/ProductsPage'
@@ -13,7 +13,26 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import AdminDashboard from './pages/AdminDashboard'
 import { CartProvider } from './context/CartContext'
-import { AuthProvider } from './context/AuthContext'
+import { AuthProvider, useAuth } from './context/AuthContext'
+
+function AdminRouteGuard() {
+  const { user, isAdmin, isAuthReady } = useAuth()
+  const location = useLocation()
+
+  if (!isAuthReady) {
+    return <div className="container section-sm">Checking your access…</div>
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />
+  }
+
+  if (!isAdmin) {
+    return <Navigate to="/" replace />
+  }
+
+  return <AdminDashboard />
+}
 
 export default function App() {
   return (
@@ -32,7 +51,7 @@ export default function App() {
               <Route path="payment/:orderId" element={<PaymentPage />} />
               <Route path="orders" element={<OrdersPage />} />
               <Route path="invoice/:orderId" element={<InvoicePage />} />
-              <Route path="admin" element={<AdminDashboard />} />
+              <Route path="admin" element={<AdminRouteGuard />} />
             </Route>
           </Routes>
         </CartProvider>

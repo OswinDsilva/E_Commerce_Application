@@ -7,6 +7,7 @@ const USER_STORAGE_KEY = 'atelier_user'
 const AUTH_MODE_STORAGE_KEY = 'atelier_auth_mode'
 
 export function AuthProvider({ children }) {
+  const [isAuthReady, setIsAuthReady] = useState(false)
   const [user, setUser] = useState(() => {
     const stored = localStorage.getItem('atelier_user')
     return stored ? JSON.parse(stored) : null
@@ -44,6 +45,8 @@ export function AuthProvider({ children }) {
           localStorage.removeItem(AUTH_MODE_STORAGE_KEY)
         }
       }
+
+      setIsAuthReady(true)
     }
 
     hydrateUser()
@@ -121,7 +124,7 @@ export function AuthProvider({ children }) {
   const isAdmin = user?.role === 'ADMIN'
 
   return (
-    <AuthContext.Provider value={{ user, authMode, login, register, logout, isAdmin }}>
+    <AuthContext.Provider value={{ user, authMode, isAuthReady, login, register, logout, isAdmin }}>
       {children}
     </AuthContext.Provider>
   )

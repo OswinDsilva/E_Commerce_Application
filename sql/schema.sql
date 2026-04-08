@@ -133,3 +133,21 @@ VALUES
     (2, 'ADMIN')
 ON DUPLICATE KEY UPDATE
     `role` = VALUES(`role`);
+
+-- Default admin login password: admin123
+INSERT INTO `Users` (`u_id`, `username`, `password_hash`, `email`, `phone`, `role_id`)
+VALUES
+    (
+        1,
+        'admin',
+        'pbkdf2_sha256$100000$276b73592aa043f65069b3fa6197e5b6$d6b7faba7705aea6ee33459b3b424bee573dac471de2cb1985fc1b5e34b7f5fd',
+        'admin@atelier.local',
+        '9999999999',
+        2
+    )
+ON DUPLICATE KEY UPDATE
+    `username` = VALUES(`username`),
+    `password_hash` = VALUES(`password_hash`),
+    `email` = VALUES(`email`),
+    `phone` = VALUES(`phone`),
+    `role_id` = VALUES(`role_id`);

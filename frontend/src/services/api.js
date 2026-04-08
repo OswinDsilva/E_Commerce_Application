@@ -67,6 +67,48 @@ const OPERATION_MESSAGES = {
     SERVER_ERROR: 'Payment is unavailable right now.',
     default: 'Unable to process payment right now.',
   },
+  productsList: {
+    NETWORK_ERROR: 'Unable to load products right now.',
+    SERVER_ERROR: 'Products are unavailable right now.',
+    default: 'Unable to load the collection right now.',
+  },
+  productDetail: {
+    NETWORK_ERROR: 'Unable to load product details right now.',
+    NOT_FOUND: 'This product could not be found.',
+    SERVER_ERROR: 'Product details are unavailable right now.',
+    default: 'Unable to load product details right now.',
+  },
+  productCreate: {
+    NETWORK_ERROR: 'Unable to add product right now.',
+    BAD_REQUEST: 'Please check the product details and try again.',
+    SERVER_ERROR: 'Product creation is unavailable right now.',
+    default: 'Unable to add product right now.',
+  },
+  productUpdate: {
+    NETWORK_ERROR: 'Unable to update product right now.',
+    NOT_FOUND: 'This product could not be found.',
+    BAD_REQUEST: 'Please check the product details and try again.',
+    SERVER_ERROR: 'Product update is unavailable right now.',
+    default: 'Unable to update product right now.',
+  },
+  productDelete: {
+    NETWORK_ERROR: 'Unable to delete product right now.',
+    NOT_FOUND: 'This product could not be found.',
+    BAD_REQUEST: 'This product cannot be deleted (may have order history).',
+    SERVER_ERROR: 'Product deletion is unavailable right now.',
+    default: 'Unable to delete product right now.',
+  },
+  categoryList: {
+    NETWORK_ERROR: 'Unable to load categories right now.',
+    SERVER_ERROR: 'Categories are unavailable right now.',
+    default: 'Unable to load categories right now.',
+  },
+  categoryCreate: {
+    NETWORK_ERROR: 'Unable to add category right now.',
+    BAD_REQUEST: 'Please check the category name and try again.',
+    SERVER_ERROR: 'Category creation is unavailable right now.',
+    default: 'Unable to add category right now.',
+  },
 }
 
 export function getUserFacingErrorMessage(error, operation) {
@@ -178,3 +220,38 @@ export const payOrder = (orderId, payload) => apiRequest(`/orders/${orderId}/pay
   method: 'POST',
   body: JSON.stringify(payload),
 })
+
+// Products API
+export const listProducts = () => apiRequest('/products')
+  .then(response => response.products || [])
+
+export const getProduct = (productId) => apiRequest(`/products/${productId}`)
+  .then(response => response.product)
+
+export const createProduct = (payload) => apiRequest('/products', {
+  method: 'POST',
+  body: JSON.stringify(payload),
+}).then(response => response.product)
+
+export const updateProduct = (productId, payload) => apiRequest(`/products/${productId}`, {
+  method: 'PUT',
+  body: JSON.stringify(payload),
+}).then(response => response.product)
+
+export const deleteProduct = (productId) => apiRequest(`/products/${productId}`, {
+  method: 'DELETE',
+})
+
+export const updateProductInventory = (productId, quantity) => apiRequest(`/products/${productId}/inventory`, {
+  method: 'PUT',
+  body: JSON.stringify({ quantity }),
+}).then(response => response.product)
+
+// Categories API
+export const listCategories = () => apiRequest('/categories')
+  .then(response => response.categories || [])
+
+export const createCategory = (category) => apiRequest('/categories', {
+  method: 'POST',
+  body: JSON.stringify({ category }),
+}).then(response => response.category)

@@ -91,14 +91,26 @@ def call_procedure(
         with connection.cursor() as cursor:
             cursor.execute(statement, params)
 
-            if fetch == "one":
-                result = cursor.fetchone()
-            elif fetch == "all":
-                result = cursor.fetchall()
-            else:
-                result = None
+            result: Any = None
 
-            _drain_result_sets(cursor)
+            def _fetch_current() -> Any:
+                if fetch == "one":
+                    return cursor.fetchone()
+                if fetch == "all":
+                    return cursor.fetchall()
+                return None
+
+            current = _fetch_current()
+            if current not in (None, []):
+                result = current
+
+            nextset = getattr(cursor, "nextset", None)
+            if callable(nextset):
+                while cursor.nextset():
+                    current = _fetch_current()
+                    if current not in (None, []):
+                        result = current
+
             return result
     except MySQLError as exc:
         raise_api_error_from_db(exc)

@@ -10,7 +10,7 @@ export default function PaymentPage() {
   const { orderId } = useParams()
   const navigate = useNavigate()
   const { authMode } = useAuth()
-  const [accounts, setAccounts] = useState(MOCK_BANK_ACCOUNTS)
+  const [accounts, setAccounts] = useState([])
   const [selectedAcc, setSelectedAcc] = useState(null)
   const [showAdd, setShowAdd] = useState(false)
   const [newAcc, setNewAcc] = useState({ acc_no: '', bank_name: '', expiry_date: '' })
@@ -23,6 +23,7 @@ export default function PaymentPage() {
 
     const loadAccounts = async () => {
       if (authMode !== 'backend') {
+        setAccounts(MOCK_BANK_ACCOUNTS)
         return
       }
 
@@ -30,7 +31,7 @@ export default function PaymentPage() {
         const bankAccounts = await listBankAccounts()
         if (!active) return
 
-        setAccounts(bankAccounts.length > 0 ? bankAccounts : MOCK_BANK_ACCOUNTS)
+        setAccounts(bankAccounts)
       } catch (loadError) {
         if (!active) return
 

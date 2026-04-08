@@ -29,6 +29,7 @@ class ProductBaseRequest(AppBaseModel):
     price: Decimal = Field(ge=0)
     category_id: int
     description: str = Field(min_length=1)
+    thumbnail_url: str | None = None
 
 
 class ProductCreateRequest(ProductBaseRequest):
@@ -55,6 +56,8 @@ class ProductOut(AppBaseModel):
     category_id: int
     category_name: str | None = None
     description: str
+    thumbnail_url: str | None = None
+    image: str | None = None
     quantity: int = 0
     stock_status: str
     last_updated: datetime | None = None

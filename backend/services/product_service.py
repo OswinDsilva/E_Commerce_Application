@@ -14,6 +14,7 @@ from .common import get_next_id
 
 def _to_product_out(row: dict[str, Any]) -> ProductOut:
     quantity = int(row.get("quantity") or 0)
+    thumbnail_url = row.get("thumbnail_url")
     return ProductOut.model_validate(
         {
             "p_id": row["p_id"],
@@ -23,6 +24,8 @@ def _to_product_out(row: dict[str, Any]) -> ProductOut:
             "category_id": row["category_id"],
             "category_name": row.get("category_name"),
             "description": row["description"],
+            "thumbnail_url": thumbnail_url,
+            "image": thumbnail_url,
             "quantity": quantity,
             "stock_status": "In Stock" if quantity > 0 else "Out of Stock",
             "last_updated": row.get("last_updated"),
@@ -42,6 +45,7 @@ def _fetch_product_row(connection: Any, p_id: int) -> dict[str, Any] | None:
                 p.category_id,
                 c.category AS category_name,
                 p.description,
+                p.thumbnail_url,
                 i.quantity,
                 i.last_updated
             FROM Products p
@@ -67,6 +71,7 @@ def list_products(connection: Any) -> list[ProductOut]:
                 p.category_id,
                 c.category AS category_name,
                 p.description,
+                p.thumbnail_url,
                 i.quantity,
                 i.last_updated
             FROM Products p
@@ -101,8 +106,8 @@ def create_product(connection: Any, payload: ProductCreateRequest) -> ProductOut
     with connection.cursor() as cursor:
         cursor.execute(
             """
-            INSERT INTO Products (p_id, product_name, brand, price, category_id, description)
-            VALUES (%s, %s, %s, %s, %s, %s)
+            INSERT INTO Products (p_id, product_name, brand, price, category_id, description, thumbnail_url)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
             """,
             (
                 p_id,
@@ -111,6 +116,7 @@ def create_product(connection: Any, payload: ProductCreateRequest) -> ProductOut
                 payload.price,
                 payload.category_id,
                 payload.description,
+                payload.thumbnail_url,
             ),
         )
 
@@ -144,7 +150,8 @@ def update_product(connection: Any, p_id: int, payload: ProductUpdateRequest) ->
                 brand = %s,
                 price = %s,
                 category_id = %s,
-                description = %s
+                description = %s,
+                thumbnail_url = COALESCE(%s, thumbnail_url)
             WHERE p_id = %s
             """,
             (
@@ -153,6 +160,7 @@ def update_product(connection: Any, p_id: int, payload: ProductUpdateRequest) ->
                 payload.price,
                 payload.category_id,
                 payload.description,
+                payload.thumbnail_url,
                 p_id,
             ),
         )

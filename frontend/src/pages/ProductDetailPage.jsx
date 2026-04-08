@@ -84,6 +84,7 @@ export default function ProductDetailPage() {
   }
 
   const inStock = product.quantity > 0
+  const imageSrc = product.image || product.thumbnail_url || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&q=80'
 
   const handleAdd = () => {
     addToCart(product, qty)
@@ -100,7 +101,7 @@ export default function ProductDetailPage() {
       <div className="product-detail__grid">
         {/* Image */}
         <div className="product-detail__image-wrap">
-          <img src={product.image} alt={product.product_name} className="product-detail__image" />
+          <img src={imageSrc} alt={product.product_name} className="product-detail__image" />
           <span className={`product-card__stock ${inStock ? 'product-card__stock--in' : 'product-card__stock--out'}`}>
             {inStock ? `In Stock (${product.quantity} left)` : 'Out of Stock'}
           </span>
@@ -142,7 +143,7 @@ export default function ProductDetailPage() {
           <div className="grid-products mt-lg">
             {related.map(p => (
               <Link key={p.p_id} to={`/products/${p.p_id}`} className="related-card card">
-                <img src={p.image} alt={p.product_name} />
+                <img src={p.image || p.thumbnail_url || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&q=80'} alt={p.product_name} />
                 <div style={{padding:'var(--space-md)'}}>
                   <p style={{fontSize:'0.7rem',color:'var(--color-cta)',fontWeight:700,letterSpacing:'0.1em',textTransform:'uppercase'}}>{p.brand}</p>
                   <p style={{fontFamily:'var(--font-heading)',fontSize:'1.1rem',color:'var(--color-primary)'}}>{p.product_name}</p>

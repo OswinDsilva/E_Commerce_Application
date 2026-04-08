@@ -2,13 +2,17 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowRight, MapPin, ShieldCheck, Truck, X } from 'lucide-react'
 import { useCart } from '../context/CartContext'
+import { useAuth } from '../context/AuthContext'
+import { createOrder, getUserFacingErrorMessage, isBackendUnavailableError } from '../services/api'
 import './CheckoutPage.css'
 
 export default function CheckoutPage() {
   const { items, cartTotal, clearCart, removeFromCart } = useCart()
+  const { authMode } = useAuth()
   const navigate = useNavigate()
   const [form, setForm] = useState({ shipping: '', billing: '', sameAddress: true })
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const shippingFee = 0
   const grandTotal = cartTotal + shippingFee
 
@@ -16,10 +20,36 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!form.shipping) return
+    const shippingAddress = form.shipping.trim()
+    const billingAddress = form.sameAddress ? shippingAddress : form.billing.trim()
+
+    if (!shippingAddress || (!form.sameAddress && !billingAddress)) return
+
     setLoading(true)
-    // TODO: POST /api/orders — create order, get o_id back
-    await new Promise(r => setTimeout(r, 800))
+    setError('')
+
+    const payload = {
+      items: items.map(({ product, quantity }) => ({ p_id: product.p_id, quantity })),
+      shipping_address: shippingAddress,
+      billing_address: billingAddress,
+    }
+
+    if (authMode === 'backend') {
+      try {
+        const order = await createOrder(payload)
+        clearCart()
+        setLoading(false)
+        navigate(`/payment/${order.o_id}`)
+        return
+      } catch (submitError) {
+        if (!isBackendUnavailableError(submitError)) {
+          setError(getUserFacingErrorMessage(submitError, 'orderCreate'))
+          setLoading(false)
+          return
+        }
+      }
+    }
+
     const mockOrderId = Math.floor(Math.random() * 9000) + 1000
     clearCart()
     setLoading(false)
@@ -49,6 +79,7 @@ export default function CheckoutPage() {
         <p className="checkout-page__subtitle">
           Review your delivery details and confirm payment. Every order is insured and packed with white-glove care.
         </p>
+        {error && <div className="auth-error" style={{ marginTop: 'var(--space-md)' }}>{error}</div>}
       </header>
 
       <div className="checkout-layout">

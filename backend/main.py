@@ -1,12 +1,17 @@
+from pathlib import Path
+
 from fastapi import FastAPI, Request
 from fastapi.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from .errors import ApiError
-from .routers import auth, bank_accounts, payments, products, users
+from .routers import auth, bank_accounts, orders, payments, products, users
 
 app = FastAPI(title="The Atelier API")
+UPLOADS_DIR = Path(__file__).resolve().parent / "uploads"
+UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 
 app.add_middleware(
     CORSMiddleware,
@@ -20,7 +25,9 @@ app.include_router(products.category_router)
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(bank_accounts.router)
+app.include_router(orders.router)
 app.include_router(payments.router)
+app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
 
 @app.exception_handler(ApiError)
 async def api_error_handler(_: Request, exc: ApiError) -> JSONResponse:

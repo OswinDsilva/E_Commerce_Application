@@ -67,6 +67,33 @@ const OPERATION_MESSAGES = {
     SERVER_ERROR: 'Payment is unavailable right now.',
     default: 'Unable to process payment right now.',
   },
+  orderCreate: {
+    NETWORK_ERROR: 'Unable to place your order right now.',
+    UNAUTHORIZED: 'Your session expired before the order could be created.',
+    BAD_REQUEST: 'Please check the order details and try again.',
+    SERVER_ERROR: 'Order creation is unavailable right now.',
+    default: 'Unable to place your order right now.',
+  },
+  ordersLoad: {
+    NETWORK_ERROR: 'Unable to load orders right now.',
+    UNAUTHORIZED: 'Your session expired before orders could load.',
+    SERVER_ERROR: 'Orders are unavailable right now.',
+    default: 'Unable to load orders right now.',
+  },
+  orderDetailLoad: {
+    NETWORK_ERROR: 'Unable to load order details right now.',
+    UNAUTHORIZED: 'Your session expired before the order details could load.',
+    NOT_FOUND: 'This order could not be found.',
+    SERVER_ERROR: 'Order details are unavailable right now.',
+    default: 'Unable to load order details right now.',
+  },
+  orderInvoiceLoad: {
+    NETWORK_ERROR: 'Unable to load the invoice right now.',
+    UNAUTHORIZED: 'Your session expired before the invoice could load.',
+    NOT_FOUND: 'This invoice could not be found.',
+    SERVER_ERROR: 'Invoice details are unavailable right now.',
+    default: 'Unable to load the invoice right now.',
+  },
   productsList: {
     NETWORK_ERROR: 'Unable to load products right now.',
     SERVER_ERROR: 'Products are unavailable right now.',
@@ -216,10 +243,29 @@ export const deleteBankAccount = (accNo) => apiRequest(`/bank-accounts/${accNo}`
   method: 'DELETE',
 })
 
+export const createOrder = (payload) => apiRequest('/orders', {
+  method: 'POST',
+  body: JSON.stringify(payload),
+}).then(response => response.order)
+
+export const listOrders = () => apiRequest('/orders')
+  .then(response => response.orders || [])
+
+export const getOrder = (orderId) => apiRequest(`/orders/${orderId}`)
+  .then(response => ({ order: response.order, items: response.items || [] }))
+
+export const addOrderItems = (orderId, payload) => apiRequest(`/orders/${orderId}/items`, {
+  method: 'POST',
+  body: JSON.stringify(payload),
+}).then(response => response.order)
+
 export const payOrder = (orderId, payload) => apiRequest(`/orders/${orderId}/pay`, {
   method: 'POST',
   body: JSON.stringify(payload),
 })
+
+export const getOrderInvoice = (orderId) => apiRequest(`/orders/${orderId}/invoice`)
+  .then(response => ({ order: response.order, invoice: response.invoice }))
 
 // Products API
 export const listProducts = () => apiRequest('/products')
@@ -232,6 +278,16 @@ export const createProduct = (payload) => apiRequest('/products', {
   method: 'POST',
   body: JSON.stringify(payload),
 }).then(response => response.product)
+
+export const uploadProductThumbnail = (file) => {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  return apiRequest('/products/upload-thumbnail', {
+    method: 'POST',
+    body: formData,
+  }).then(response => response.thumbnail_url)
+}
 
 export const updateProduct = (productId, payload) => apiRequest(`/products/${productId}`, {
   method: 'PUT',

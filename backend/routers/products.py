@@ -1,4 +1,8 @@
+from pathlib import Path
+from uuid import uuid4
+
 from fastapi import APIRouter, Depends, Response, status
+from fastapi import File, UploadFile
 from pymysql.connections import Connection
 
 from ..database import get_db
@@ -29,6 +33,13 @@ from ..services.product_service import (
 
 router = APIRouter(prefix="/products", tags=["products"])
 category_router = APIRouter(prefix="/categories", tags=["categories"])
+UPLOAD_ROOT = Path(__file__).resolve().parent.parent / "uploads" / "products"
+MAX_THUMBNAIL_SIZE = 2 * 1024 * 1024
+ALLOWED_IMAGE_TYPES = {
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/webp": ".webp",
+}
 
 
 @router.get("", response_model=ProductListResponse)
@@ -50,6 +61,27 @@ def add_product(
     db: Connection = Depends(get_db),
 ) -> ProductResponse:
     return ProductResponse(product=create_product(db, payload))
+
+
+@router.post("/upload-thumbnail")
+async def upload_product_thumbnail(file: UploadFile = File(...)) -> dict[str, str]:
+    content_type = file.content_type or ""
+    extension = ALLOWED_IMAGE_TYPES.get(content_type)
+    if not extension:
+        raise ApiError("Unsupported image format. Use JPG, PNG, or WEBP.", "BAD_REQUEST", 400)
+
+    data = await file.read()
+    if not data:
+        raise ApiError("Uploaded file is empty", "BAD_REQUEST", 400)
+    if len(data) > MAX_THUMBNAIL_SIZE:
+        raise ApiError("Image must be 2MB or smaller", "BAD_REQUEST", 400)
+
+    UPLOAD_ROOT.mkdir(parents=True, exist_ok=True)
+    filename = f"{uuid4().hex}{extension}"
+    file_path = UPLOAD_ROOT / filename
+    file_path.write_bytes(data)
+
+    return {"thumbnail_url": f"/uploads/products/{filename}"}
 
 
 @router.put("/{p_id}", response_model=ProductResponse)

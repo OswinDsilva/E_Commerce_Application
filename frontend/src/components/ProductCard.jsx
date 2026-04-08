@@ -6,13 +6,15 @@ import './ProductCard.css'
 
 export default function ProductCard({ product, style }) {
   const { addToCart } = useCart()
-  const inStock = product.stock > 0
+  const quantity = Number(product.quantity ?? product.stock ?? 0)
+  const inStock = quantity > 0
+  const imageSrc = product.image || product.thumbnail_url || 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&q=80'
 
   return (
     <article className="product-card card animate-fadeUp" style={style}>
       <div className="product-card__image-wrap">
         <img
-          src={product.image}
+          src={imageSrc}
           alt={product.product_name}
           className="product-card__image"
           loading="lazy"

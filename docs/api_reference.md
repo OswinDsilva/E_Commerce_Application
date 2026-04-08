@@ -81,7 +81,7 @@ Current implementation note: these endpoints are self-only in the current Person
 
 | Method | Endpoint | Response | Description |
 |--------|----------|----------|-------------|
-| `GET` | `/invoices/:o_id` | `{ invoice, order, items[] }` | Get invoice by order ID |
+| `GET` | `/orders/:o_id/invoice` | `{ order, invoice }` | Get generated invoice for an order |
 
 ---
 

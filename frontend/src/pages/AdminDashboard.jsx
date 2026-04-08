@@ -3,6 +3,7 @@ import { Plus, Package, Archive, Edit3, Save, X, BarChart2 } from 'lucide-react'
 import {
   listProducts,
   createProduct,
+  uploadProductThumbnail,
   updateProduct,
   deleteProduct,
   updateProductInventory,
@@ -23,6 +24,7 @@ const DEFAULT_NEW_PRODUCT = {
   category_id: 1,
   description: '',
   quantity: '',
+  thumbnail_url: '',
 }
 
 const normalizeProduct = (product, categoryMap = new Map()) => {
@@ -33,6 +35,7 @@ const normalizeProduct = (product, categoryMap = new Map()) => {
     category_name: product.category_name || categoryMap.get(categoryId) || 'Uncategorized',
     quantity: Number(product.quantity ?? product.stock ?? 0),
     price: Number(product.price ?? 0),
+    image: product.image || product.thumbnail_url || '',
   }
 }
 
@@ -45,6 +48,8 @@ export default function AdminDashboard() {
   const [editId, setEditId] = useState(null)
   const [editData, setEditData] = useState({})
   const [newProduct, setNewProduct] = useState(DEFAULT_NEW_PRODUCT)
+  const [thumbnailFile, setThumbnailFile] = useState(null)
+  const [thumbnailPreview, setThumbnailPreview] = useState('')
   const [newCategoryName, setNewCategoryName] = useState('')
   const [saved, setSaved] = useState(false)
   const [savedMessage, setSavedMessage] = useState('Changes saved!')
@@ -157,7 +162,18 @@ export default function AdminDashboard() {
       return
     }
 
+    if (thumbnailFile && thumbnailFile.size > 2 * 1024 * 1024) {
+      setAddError('Thumbnail image must be 2MB or smaller.')
+      return
+    }
+
+    let thumbnailUrl = newProduct.thumbnail_url || null
+
     try {
+      if (thumbnailFile) {
+        thumbnailUrl = await uploadProductThumbnail(thumbnailFile)
+      }
+
       const np = await createProduct({
         product_name: newProduct.product_name,
         brand: newProduct.brand,
@@ -165,14 +181,36 @@ export default function AdminDashboard() {
         category_id: newProduct.category_id,
         description: newProduct.description,
         quantity: parseInt(newProduct.quantity) || 0,
+        thumbnail_url: thumbnailUrl,
       })
       setProducts(ps => [...ps, normalizeProduct(np, new Map(categories.map(c => [Number(c.id), c.category])))])
       setNewProduct({ ...DEFAULT_NEW_PRODUCT, category_id: categories[0]?.id || 1 })
+      setThumbnailFile(null)
+      setThumbnailPreview('')
       setTab('Products')
       showSaved('Product added successfully!')
     } catch (err) {
       setAddError(getUserFacingErrorMessage(err, 'productCreate'))
     }
+  }
+
+  const handleThumbnailChange = (event) => {
+    const file = event.target.files?.[0]
+    setThumbnailFile(file || null)
+
+    if (!file) {
+      setThumbnailPreview(prev => {
+        if (prev) URL.revokeObjectURL(prev)
+        return ''
+      })
+      return
+    }
+
+    const previewUrl = URL.createObjectURL(file)
+    setThumbnailPreview(prev => {
+      if (prev) URL.revokeObjectURL(prev)
+      return previewUrl
+    })
   }
 
   const handleAddCategory = async (e) => {
@@ -438,6 +476,23 @@ export default function AdminDashboard() {
               <div className="input-group">
                 <label className="input-label" htmlFor="np-quantity">Initial Stock</label>
                 <input id="np-quantity" className="input" type="number" min="0" value={newProduct.quantity} onChange={e => setNewProduct(p => ({...p, quantity: e.target.value}))} placeholder="0" required />
+              </div>
+              <div className="input-group">
+                <label className="input-label" htmlFor="np-thumbnail">Thumbnail Photo</label>
+                <input
+                  id="np-thumbnail"
+                  className="input"
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={handleThumbnailChange}
+                />
+                {thumbnailPreview && (
+                  <img
+                    src={thumbnailPreview}
+                    alt="Thumbnail preview"
+                    style={{ marginTop: '0.75rem', width: '100%', maxWidth: '220px', borderRadius: '8px', objectFit: 'cover' }}
+                  />
+                )}
               </div>
             </div>
             <div className="input-group">

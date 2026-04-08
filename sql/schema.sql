@@ -54,7 +54,8 @@ CREATE TABLE `Products` (
     `brand`        VARCHAR(255)   NOT NULL,
     `price`        DECIMAL(10, 2) NOT NULL CHECK (`price` >= 0),
     `category_id`  BIGINT         NOT NULL,
-    `description`  TEXT           NOT NULL
+    `description`  TEXT           NOT NULL,
+    `thumbnail_url` VARCHAR(1024) NULL
 );
 ALTER TABLE `Products` ADD PRIMARY KEY (`p_id`);
 ALTER TABLE `Products` ADD CONSTRAINT `products_category_foreign`
@@ -83,7 +84,9 @@ CREATE TABLE `Orders` (
     ),
     `total_amount` DECIMAL(10, 2) NOT NULL CHECK (`total_amount` >= 0),
     `u_id`         INTEGER        NOT NULL,
-    `acc_no`       INTEGER        NULL
+    `acc_no`       INTEGER        NULL,
+    `shipping_address` TEXT       NULL,
+    `billing_address`  TEXT       NULL
 );
 ALTER TABLE `Orders` ADD PRIMARY KEY (`o_id`);
 ALTER TABLE `Orders` ADD CONSTRAINT `orders_u_id_foreign`

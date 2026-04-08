@@ -1,6 +1,8 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Package, FileText, ChevronRight } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
+import { getOrder, getUserFacingErrorMessage, isBackendUnavailableError, listOrders } from '../services/api'
 import { MOCK_ORDERS } from '../data/mockData'
 import './OrdersPage.css'
 
@@ -13,7 +15,86 @@ const STATUS_BADGE = {
 }
 
 export default function OrdersPage() {
-  if (MOCK_ORDERS.length === 0) return (
+  const { authMode } = useAuth()
+  const [orders, setOrders] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    let active = true
+
+    const loadOrders = async () => {
+      setLoading(true)
+      setError('')
+
+      if (authMode !== 'backend') {
+        if (!active) return
+        setOrders(MOCK_ORDERS)
+        setLoading(false)
+        return
+      }
+
+      try {
+        const backendOrders = await listOrders()
+        if (!active) return
+
+        const detailedOrders = await Promise.all(
+          backendOrders.map(async order => {
+            try {
+              const detail = await getOrder(order.o_id)
+              return { ...order, items: detail.items }
+            } catch {
+              return { ...order, items: [] }
+            }
+          })
+        )
+
+        if (!active) return
+        setOrders(detailedOrders)
+      } catch (loadError) {
+        if (!active) return
+
+        if (isBackendUnavailableError(loadError)) {
+          setOrders(MOCK_ORDERS)
+        } else {
+          setOrders([])
+          setError(getUserFacingErrorMessage(loadError, 'ordersLoad'))
+        }
+      } finally {
+        if (active) {
+          setLoading(false)
+        }
+      }
+    }
+
+    loadOrders()
+
+    return () => {
+      active = false
+    }
+  }, [authMode])
+
+  if (loading) {
+    return (
+      <div className="container text-center section">
+        <Package size={56} style={{ color: 'var(--color-border)', margin: '0 auto 24px' }} />
+        <h2>Loading Orders</h2>
+        <p>Fetching your recent purchases…</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="container text-center section">
+        <Package size={56} style={{ color: 'var(--color-border)', margin: '0 auto 24px' }} />
+        <h2>Orders Unavailable</h2>
+        <p>{error}</p>
+      </div>
+    )
+  }
+
+  if (orders.length === 0) return (
     <div className="container text-center section">
       <Package size={56} style={{color:'var(--color-border)',margin:'0 auto 24px'}} />
       <h2>No Orders Yet</h2>
@@ -30,7 +111,7 @@ export default function OrdersPage() {
       </div>
 
       <div className="orders-list">
-        {MOCK_ORDERS.map(order => (
+        {orders.map(order => (
           <div key={order.o_id} className="order-card card">
             <div className="order-card__header">
               <div className="order-card__id">
@@ -41,11 +122,13 @@ export default function OrdersPage() {
             </div>
             <div className="order-card__body">
               <div className="order-card__items">
-                {order.items.map(item => (
+                {(order.items || []).length > 0 ? order.items.map(item => (
                   <p key={item.p_id} className="order-card__item-row">
                     {item.product_name} <span>× {item.quantity}</span>
                   </p>
-                ))}
+                )) : (
+                  <p className="order-card__item-row">Item details unavailable</p>
+                )}
               </div>
               <div className="order-card__meta">
                 <p className="order-card__date">Placed: {new Date(order.order_date).toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' })}</p>

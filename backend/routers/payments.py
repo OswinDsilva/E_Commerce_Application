@@ -4,7 +4,7 @@ from pymysql.connections import Connection
 from ..database import get_db
 from ..schemas.payments import PayOrderRequest, PayOrderResponse
 from ..schemas.users import AuthenticatedUser
-from ..services.payment_service import pay_for_order
+from ..services.payment_service import get_invoice_for_order, pay_for_order
 from ..utils.auth import require_auth
 
 
@@ -23,3 +23,12 @@ def pay_order(
     db: Connection = Depends(get_db),
 ) -> PayOrderResponse:
     return pay_for_order(db, o_id, payload, current_user)
+
+
+@router.get("/{o_id}/invoice", response_model=PayOrderResponse)
+def get_order_invoice(
+    o_id: int,
+    current_user: AuthenticatedUser = Depends(_current_user),
+    db: Connection = Depends(get_db),
+) -> PayOrderResponse:
+    return get_invoice_for_order(db, o_id, current_user)
